@@ -1,0 +1,385 @@
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { PerspectiveCamera } from '@react-three/drei'
+import * as THREE from 'three'
+
+function Target({ position }) {
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[0.4, 32, 32]} />
+      <meshStandardMaterial color="#ff4655" emissive="#ff4655" emissiveIntensity={0.8} />
+    </mesh>
+  )
+}
+
+function PlayerController({ sensitivityMultiplier = 1 }) {
+  const { camera } = useThree()
+  const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
+
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!document.pointerLockElement) return
+      const { movementX, movementY } = e
+      const baseSensitivity = 0.002
+      const finalSensitivity = baseSensitivity * sensitivityMultiplier
+      rotation.current.y -= movementX * finalSensitivity
+      rotation.current.x -= movementY * finalSensitivity
+      rotation.current.x = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, rotation.current.x))
+      camera.rotation.copy(rotation.current)
+    },
+    [camera, sensitivityMultiplier]
+  )
+
+  useEffect(() => {
+    camera.rotation.order = 'YXZ'
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [camera, handleMouseMove])
+
+  return null
+}
+
+function Scene({ onScore, onMiss, sensitivity, active }) {
+  const [targetPos, setTargetPos] = useState([0, 0, -5])
+  const spawnTimeRef = useRef(null)
+  const startRotRef = useRef(new THREE.Euler())
+  const { camera, raycaster, scene } = useThree()
+
+  const spawnTarget = useCallback(() => {
+    const rangeX = 1.8
+    const rangeY = 1.2
+    const newPos = [(Math.random() - 0.5) * 2 * rangeX, (Math.random() - 0.5) * 2 * rangeY, -5]
+    setTargetPos(newPos)
+    spawnTimeRef.current = performance.now()
+    startRotRef.current.copy(camera.rotation)
+  }, [camera])
+
+  const handleShot = useCallback(() => {
+    if (!active) return
+    raycaster.setFromCamera({ x: 0, y: 0 }, camera)
+    const intersects = raycaster.intersectObjects(scene.children, true)
+    const targetHit = intersects.find(
+      (hit) => hit.object.type === 'Mesh' && hit.object.geometry.type === 'SphereGeometry'
+    )
+
+    // Calculate Aim Analysis
+    const targetV = new THREE.Vector3(...targetPos)
+    // Calculate target Yaw/Pitch relative to default forward (0,0,-1)
+    // Yaw: Rotation around Y axis. atan2(x, -z) because -z is forward.
+    const targetYaw = Math.atan2(targetV.x, -targetV.z)
+    // Pitch: Rotation around X axis. Positive is DOWN in Three.js usually? 
+    // Wait, in PlayerController: rotation.x -= movementY. 
+    // Usually Up is +Y. Looking up is positive rotation around X? No, Looking up is usually positive pitch?
+    // Let's check PlayerController: rotation.x -= movementY. 
+    // If I move mouse UP (negative movementY usually? or positive?), let's assume standard:
+    // Moving mouse UP -> negative deltaY -> rotation.x increases? 
+    // Actually, let's just use the values as is.
+    // Target Pitch: atan2(y, z_dist). 
+    const targetDistZ = Math.sqrt(targetV.x * targetV.x + targetV.z * targetV.z)
+    const targetPitch = Math.atan2(targetV.y, -targetV.z) // Simplification for small angles? 
+    // Correct Pitch: atan2(y, sqrt(x^2+z^2)). But wait, Z is negative.
+    // Let's use simple Vector angle to planes.
+    
+    // Better: Project target to angles
+    const vec = targetV.clone().normalize()
+    const spherical = new THREE.Spherical().setFromVector3(vec)
+    // Spherical: phi is from +Y (0 is up, PI is down). theta is from +Z.
+    // Our camera: -Z is forward. 
+    // Let's stick to simple atan2 for the "screen-like" coordinates
+    const tYaw = Math.atan2(targetV.x, -targetV.z)
+    const tPitch = Math.atan2(targetV.y, -targetV.z) // Approx for narrow FOV? No.
+    // Real pitch: atan2(y, depth). 
+    
+    // Let's use the camera rotation values directly.
+    const currentYaw = camera.rotation.y
+    const currentPitch = camera.rotation.x
+    
+    const startYaw = startRotRef.current.y
+    const startPitch = startRotRef.current.x
+    
+    // Analyze Yaw (Horizontal is most important for sens)
+    const flickDirYaw = tYaw - startYaw
+    const shotDirYaw = currentYaw - startYaw
+    
+    let outcome = 'hit'
+    let errorType = 'none'
+    let errorMag = 0
+    
+    // Only analyze if there was a significant flick intent (> 0.1 rad)
+    if (Math.abs(flickDirYaw) > 0.05) {
+        const ratio = shotDirYaw / flickDirYaw
+        if (ratio > 1.05) {
+            errorType = 'overshoot'
+            errorMag = Math.abs(shotDirYaw - flickDirYaw)
+        } else if (ratio < 0.95) {
+            errorType = 'undershoot'
+            errorMag = Math.abs(flickDirYaw - shotDirYaw)
+        }
+    }
+
+    const now = performance.now()
+    const dt = spawnTimeRef.current ? (now - spawnTimeRef.current) : 0
+    
+    const shotData = {
+        isHit: !!targetHit,
+        time: dt,
+        errorType,
+        errorMag,
+        flickSize: Math.abs(flickDirYaw)
+    }
+    
+    if (targetHit) {
+      onScore(shotData)
+      spawnTarget()
+    } else {
+      onMiss(shotData)
+    }
+  }, [active, camera, raycaster, scene, onScore, onMiss, spawnTarget, targetPos])
+
+  useEffect(() => {
+    window.addEventListener('mousedown', handleShot)
+    return () => window.removeEventListener('mousedown', handleShot)
+  }, [handleShot])
+
+  useEffect(() => {
+    if (!active) return
+    spawnTarget()
+  }, [active, spawnTarget])
+
+  return (
+    <>
+      <PlayerController sensitivityMultiplier={sensitivity} />
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+      
+      <gridHelper args={[50, 50, 0x444444, 0x222222]} position={[0, -2, 0]} />
+      
+      <Target position={targetPos} />
+    </>
+  )
+}
+
+export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' }) {
+  const [score, setScore] = useState(0)
+  const [misses, setMisses] = useState(0)
+  const [timeLeft, setTimeLeft] = useState(30)
+  const [started, setStarted] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [isPointerLocked, setIsPointerLocked] = useState(false)
+  const containerRef = useRef(null)
+  
+  const statsRef = useRef([])
+
+  const bg = theme === 'light' ? 'bg-white' : 'bg-slate-900'
+
+  useEffect(() => {
+    const handleLockChange = () => {
+      setIsPointerLocked(!!document.pointerLockElement)
+    }
+    document.addEventListener('pointerlockchange', handleLockChange)
+    return () => document.removeEventListener('pointerlockchange', handleLockChange)
+  }, [])
+
+  const requestLock = () => {
+    if (containerRef.current && !isPointerLocked) {
+      const element = containerRef.current
+      const promise = element.requestPointerLock({
+        unadjustedMovement: true,
+      })
+      if (promise && promise.catch) {
+        promise.catch(() => element.requestPointerLock())
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!started || countdown !== 0) return
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [started, countdown])
+
+  useEffect(() => {
+    if (!started || countdown !== 0) return
+    if (timeLeft > 0) return
+    if (document.pointerLockElement) {
+      document.exitPointerLock()
+    }
+    
+    // Analyze stats
+    const totalShots = statsRef.current.length
+    const overshoots = statsRef.current.filter(s => s.errorType === 'overshoot').length
+    const undershoots = statsRef.current.filter(s => s.errorType === 'undershoot').length
+    const hits = statsRef.current.filter(s => s.isHit).length
+    
+    let recommendation = '적절함'
+    let detail = '현재 감도가 잘 맞습니다.'
+    
+    if (totalShots > 5) { // Minimum sample size
+        if (overshoots > undershoots * 1.5) {
+            recommendation = '감도 낮춤 추천'
+            detail = '타겟을 지나치는 경향(Overshoot)이 있어 감도를 조금 낮추는 것을 추천합니다.'
+        } else if (undershoots > overshoots * 1.5) {
+            recommendation = '감도 높임 추천'
+            detail = '타겟에 못 미치는 경향(Undershoot)이 있어 감도를 조금 높이는 것을 추천합니다.'
+        }
+    }
+
+    const accuracy = Math.round((score / (score + misses)) * 100) || 0
+    const timeSpent = 30
+    onComplete({
+      accuracy,
+      score,
+      misses,
+      timeSpent,
+      recommendation,
+      detail,
+      stats: statsRef.current
+    })
+  }, [started, countdown, timeLeft, score, misses, onComplete])
+
+  useEffect(() => {
+    if (!started) return
+    if (countdown <= 0) return
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [started, countdown])
+
+  return (
+    <div
+      ref={containerRef}
+      className={`w-full h-full relative ${bg} ${isPointerLocked ? 'cursor-none' : 'cursor-default'}`}
+      onClick={requestLock}
+    >
+      {!started && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div
+            className={`text-center p-8 border shadow-2xl max-w-md ${
+              theme === 'light'
+                ? 'bg-white/95 border-slate-200 text-slate-900'
+                : 'bg-slate-800 border-white/10 text-white'
+            }`}
+          >
+            <h2
+              className={`text-3xl font-black mb-4 ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}
+            >
+              플릭킹 테스트
+            </h2>
+            <p
+              className={`mb-6 leading-relaxed ${
+                theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+              }`}
+            >
+              화면 곳곳에 나타나는 타겟을 빠르고 정확하게 클릭하는 능력을 측정합니다.
+            </p>
+            <p
+              className={`mb-6 text-xs ${
+                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+              }`}
+            >
+              30초 동안 최대한 많은 타겟을 맞춰보세요.
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setScore(0)
+                setMisses(0)
+                setTimeLeft(30)
+                setStarted(true)
+                setCountdown(3)
+                statsRef.current = []
+                requestLock()
+              }}
+              className="px-10 py-4 bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all transform hover:scale-105 shadow-lg shadow-red-500/20"
+            >
+              테스트 시작
+            </button>
+          </div>
+        </div>
+      )}
+
+      {started && !isPointerLocked && (
+        <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+          <div className="text-center animate-bounce">
+            <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 shadow-2xl">
+              화면을 클릭하여 마우스를 고정하세요
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`absolute inset-0 pointer-events-none z-20 flex items-center justify-center transition-opacity duration-300 ${
+          started && countdown === 0 && isPointerLocked ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="relative w-6 h-6">
+          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-[#4ade80] -translate-y-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+          <div className="absolute left-1/2 top-0 w-[2px] h-full bg-[#4ade80] -translate-x-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+          <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white -translate-x-1/2 -translate-y-1/2" />
+        </div>
+      </div>
+
+      <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 backdrop-blur-md border border-white/15 text-right shadow-lg">
+        <div className="flex justify-between gap-4">
+          <span className="text-slate-400">Targets</span>
+          <span className="font-bold text-[#ff4655]">{score}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-slate-400">Time</span>
+          <span className="font-bold text-red-400">{timeLeft}s</span>
+        </div>
+      </div>
+
+      {started && countdown > 0 && (
+        <div className="absolute inset-0 z-[26] flex items-center justify-center bg-black/60">
+          <div className="text-white text-6xl md:text-7xl font-black drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
+            {countdown}
+          </div>
+        </div>
+      )}
+
+      <Canvas shadows camera={{ position: [0, 0, 0], fov: 75 }}>
+        {started && (
+          <>
+            <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
+            <Scene
+              onScore={(data) => {
+                setScore((s) => s + 1)
+                statsRef.current.push(data)
+              }}
+              onMiss={(data) => {
+                setMisses((m) => m + 1)
+                statsRef.current.push(data)
+              }}
+              sensitivity={sensitivity}
+              active={countdown === 0}
+            />
+          </>
+        )}
+      </Canvas>
+
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 backdrop-blur-md border border-white/10">
+        {started
+          ? countdown > 0
+            ? '3, 2, 1 카운트다운 이후에 타겟이 나타납니다.'
+            : isPointerLocked
+            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요.'
+            : '화면을 클릭하여 마우스를 고정하세요.'
+          : '테스트 시작 버튼을 누르세요.'}
+      </div>
+    </div>
+  )
+}
