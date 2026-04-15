@@ -3,6 +3,9 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
+const TOTAL_TARGETS = 20
+const TIME_LIMIT_MS = 1500
+
 function PlayerController({ sensitivityMultiplier = 1 }) {
   const { camera } = useThree()
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
@@ -30,68 +33,108 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
   return null
 }
 
-function TrackingTarget({ onScore }) {
+// 정지 타겟 - 일정 시간 후 자동 소멸, 클릭 시 hit 판정
+function TappingTarget({ position, timeLimit, onHit, onMiss }) {
   const meshRef = useRef(null)
-  const [velocity] = useState(() => {
-    const speed = 4
-    const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, 0)
-    if (dir.lengthSq() === 0) dir.set(1, 0, 0)
-    dir.normalize().multiplyScalar(speed)
-    return dir
-  })
+  const spawnTime = useRef(performance.now())
+  const resolved = useRef(false)
   const { camera, raycaster } = useThree()
 
-  useFrame((_, delta) => {
-    if (!meshRef.current) return
-    const newPos = meshRef.current.position.clone().add(velocity.clone().multiplyScalar(delta))
-    if (Math.abs(newPos.x) > 5) {
-      velocity.x *= -1
-      newPos.x = THREE.MathUtils.clamp(newPos.x, -5, 5)
+  useFrame(() => {
+    if (resolved.current) return
+    if (performance.now() - spawnTime.current >= timeLimit) {
+      resolved.current = true
+      onMiss()
     }
-    const minY = -1.5
-    const maxY = 3
-    if (newPos.y < minY || newPos.y > maxY) {
-      velocity.y *= -1
-      newPos.y = THREE.MathUtils.clamp(newPos.y, minY, maxY)
-    }
-    meshRef.current.position.copy(newPos)
+  })
+
+  const handleMouseDown = useCallback(() => {
+    if (resolved.current || !meshRef.current) return
     raycaster.setFromCamera({ x: 0, y: 0 }, camera)
     const intersects = raycaster.intersectObject(meshRef.current)
     if (intersects.length > 0) {
-      onScore(delta)
+      resolved.current = true
+      onHit(performance.now() - spawnTime.current)
     }
-  })
+  }, [camera, raycaster, onHit])
+
+  useEffect(() => {
+    window.addEventListener('mousedown', handleMouseDown)
+    return () => window.removeEventListener('mousedown', handleMouseDown)
+  }, [handleMouseDown])
 
   return (
-    <mesh ref={meshRef} position={[0, 0, -5]}>
+    <mesh ref={meshRef} position={position}>
       <sphereGeometry args={[0.3, 32, 32]} />
       <meshStandardMaterial color="#ff4655" emissive="#ff4655" emissiveIntensity={0.8} />
     </mesh>
   )
 }
 
-function Scene({ onScore, sensitivity }) {
+function Scene({ onHit, onMiss, sensitivity, targetPos, targetKey, active }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} intensity={1} />
-      <TrackingTarget onScore={onScore} />
       <gridHelper args={[50, 50, 0x444444, 0x222222]} position={[0, -2, 0]} />
+      {active && targetPos && (
+        <TappingTarget
+          key={targetKey}
+          position={targetPos}
+          timeLimit={TIME_LIMIT_MS}
+          onHit={onHit}
+          onMiss={onMiss}
+        />
+      )}
     </>
   )
 }
 
 export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' }) {
-  const [score, setScore] = useState(0)
-  const [onTargetTime, setOnTargetTime] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(20)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [targetPos, setTargetPos] = useState(null)
+  const [targetKey, setTargetKey] = useState(0)
   const [started, setStarted] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
   const containerRef = useRef(null)
 
+  const currentIndexRef = useRef(0)
+  const hitsRef = useRef(0)
+  const reactionTimesRef = useRef([])
+  const firstSpawnDoneRef = useRef(false)
+
   const bg = theme === 'light' ? 'bg-white' : 'bg-slate-900'
+
+  const spawnTarget = useCallback(() => {
+    // 발로란트 실전 에임 범위: 머리 높이 중심, 수평 분포
+    const x = (Math.random() - 0.5) * 4.0   // -2 ~ 2
+    const y = Math.random() * 1.8 - 0.4      // -0.4 ~ 1.4 (머리 높이 중심)
+    setTargetPos([x, y, -5])
+    setTargetKey((k) => k + 1)
+  }, [])
+
+  const handleHit = useCallback(
+    (reactionTime) => {
+      hitsRef.current += 1
+      reactionTimesRef.current.push(reactionTime)
+      currentIndexRef.current += 1
+      setCurrentIndex(currentIndexRef.current)
+      if (currentIndexRef.current < TOTAL_TARGETS) {
+        spawnTarget()
+      }
+    },
+    [spawnTarget]
+  )
+
+  const handleMiss = useCallback(() => {
+    currentIndexRef.current += 1
+    setCurrentIndex(currentIndexRef.current)
+    if (currentIndexRef.current < TOTAL_TARGETS) {
+      spawnTarget()
+    }
+  }, [spawnTarget])
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -101,59 +144,51 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
     return () => document.removeEventListener('pointerlockchange', handleLockChange)
   }, [])
 
-  const handleScore = useCallback(
-    (delta) => {
-      setScore((s) => s + 1)
-      setOnTargetTime((t) => t + delta)
-    },
-    []
-  )
-
   const requestLock = () => {
     if (containerRef.current && !isPointerLocked) {
       const element = containerRef.current
-      const promise = element.requestPointerLock({
-        unadjustedMovement: true,
-      })
+      const promise = element.requestPointerLock({ unadjustedMovement: true })
       if (promise && promise.catch) {
         promise.catch(() => element.requestPointerLock())
       }
     }
   }
 
+  // 카운트다운 처리
   useEffect(() => {
-    if (!started) return
-    if (countdown !== 0) return
-    if (timeLeft <= 0) return
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [started, countdown, timeLeft])
-
-  useEffect(() => {
-    if (!started || timeLeft !== 0) return
-    if (document.pointerLockElement) {
-      document.exitPointerLock()
-    }
-    const totalTime = 20
-    const accuracy = Math.min(Math.round((onTargetTime / totalTime) * 100), 100)
-    onComplete({ trackingAccuracy: accuracy })
-  }, [started, timeLeft, onTargetTime, onComplete])
-
-  useEffect(() => {
-    if (!started) return
-    if (countdown <= 0) return
+    if (!started || countdown <= 0) return
     const timer = setTimeout(() => {
       setCountdown((prev) => prev - 1)
     }, 1000)
     return () => clearTimeout(timer)
   }, [started, countdown])
+
+  // 카운트다운 종료 시 첫 타겟 스폰
+  useEffect(() => {
+    if (!started || countdown !== 0 || firstSpawnDoneRef.current) return
+    firstSpawnDoneRef.current = true
+    spawnTarget()
+  }, [started, countdown, spawnTarget])
+
+  // 테스트 완료 처리
+  useEffect(() => {
+    if (!started || currentIndex < TOTAL_TARGETS) return
+    if (document.pointerLockElement) document.exitPointerLock()
+    const accuracy = Math.round((hitsRef.current / TOTAL_TARGETS) * 100)
+    const avgReactionTime =
+      reactionTimesRef.current.length > 0
+        ? Math.round(
+            reactionTimesRef.current.reduce((a, b) => a + b, 0) /
+              reactionTimesRef.current.length
+          )
+        : 0
+    onComplete({
+      tappingAccuracy: accuracy,
+      avgReactionTime,
+      hits: hitsRef.current,
+      total: TOTAL_TARGETS,
+    })
+  }, [started, currentIndex, onComplete])
 
   return (
     <div
@@ -161,6 +196,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
       className={`w-full h-full relative ${bg} ${isPointerLocked ? 'cursor-none' : 'cursor-default'}`}
       onClick={requestLock}
     >
+      {/* 시작 오버레이 */}
       {!started && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
@@ -175,31 +211,36 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
                 theme === 'light' ? 'text-slate-900' : 'text-white'
               }`}
             >
-              트래킹 테스트
+              탭샷 테스트
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
                 theme === 'light' ? 'text-slate-700' : 'text-slate-300'
               }`}
             >
-              움직이는 타겟을 조준점으로 따라가는 능력을 측정합니다.
+              나타나는 정지 타겟을 빠르게 조준하여 클릭하세요.
+              각 타겟은 <span className="text-[#ff4655] font-bold">1.5초</span> 후 사라집니다.
             </p>
             <p
               className={`mb-6 text-xs ${
                 theme === 'light' ? 'text-slate-500' : 'text-slate-400'
               }`}
             >
-              20초 동안 타겟을 최대한 정확하게 따라가며 조준을 유지해 보세요.
+              총 {TOTAL_TARGETS}개의 타겟 · 발로란트의 멈추고 쏘는 에임 방식을 시뮬레이션합니다.
             </p>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                setScore(0)
-                setOnTargetTime(0)
-                setTimeLeft(20)
-                setCountdown(3)
+                currentIndexRef.current = 0
+                hitsRef.current = 0
+                reactionTimesRef.current = []
+                firstSpawnDoneRef.current = false
+                setCurrentIndex(0)
+                setTargetPos(null)
+                setTargetKey(0)
                 setStarted(true)
+                setCountdown(3)
                 requestLock()
               }}
               className="px-10 py-4 bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all transform hover:scale-105 shadow-lg shadow-red-500/20"
@@ -210,6 +251,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       )}
 
+      {/* 포인터 락 안내 */}
       {started && !isPointerLocked && (
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
@@ -220,6 +262,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       )}
 
+      {/* 크로스헤어 */}
       <div
         className={`absolute inset-0 pointer-events-none z-20 flex items-center justify-center transition-opacity duration-300 ${
           started && countdown === 0 && isPointerLocked ? 'opacity-100' : 'opacity-0'
@@ -232,6 +275,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       </div>
 
+      {/* 카운트다운 */}
       {started && countdown > 0 && (
         <div className="absolute inset-0 z-[26] flex items-center justify-center bg-black/60">
           <div className="text-white text-6xl md:text-7xl font-black drop-shadow-[0_0_20px_rgba(0,0,0,0.8)]">
@@ -240,14 +284,28 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       )}
 
+      {/* 타겟 시간 제한 바 */}
+      {started && countdown === 0 && isPointerLocked && (
+        <div className="absolute top-0 left-0 w-full z-[999] h-1.5 bg-slate-700/50">
+          <div
+            key={targetKey}
+            className="h-full bg-[#ff4655] origin-left"
+            style={{ animation: `shrink-bar ${TIME_LIMIT_MS}ms linear forwards` }}
+          />
+        </div>
+      )}
+
+      {/* HUD */}
       <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 backdrop-blur-md border border-white/15 text-right shadow-lg">
         <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Score</span>
-          <span className="font-bold text-[#ff4655]">{score}</span>
+          <span className="text-slate-400">Target</span>
+          <span className="font-bold text-[#ff4655]">
+            {Math.min(currentIndex + 1, TOTAL_TARGETS)} / {TOTAL_TARGETS}
+          </span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Time</span>
-          <span className="font-bold text-red-400">{timeLeft}s</span>
+          <span className="text-slate-400">Hits</span>
+          <span className="font-bold text-green-400">{hitsRef.current}</span>
         </div>
       </div>
 
@@ -256,8 +314,12 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
           <>
             <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
             <Scene
-              onScore={handleScore}
+              onHit={handleHit}
+              onMiss={handleMiss}
               sensitivity={sensitivity}
+              targetPos={targetPos}
+              targetKey={targetKey}
+              active={currentIndex < TOTAL_TARGETS}
             />
           </>
         )}
@@ -266,9 +328,9 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 backdrop-blur-md border border-white/10">
         {started
           ? countdown > 0
-            ? '3, 2, 1 카운트다운 이후에 타겟이 움직입니다.'
+            ? '3, 2, 1 카운트다운 후 타겟이 나타납니다.'
             : isPointerLocked
-            ? '마우스가 고정되었습니다. 조준하여 타겟을 따라가세요.'
+            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요.'
             : '화면을 클릭하여 마우스를 고정하세요.'
           : '테스트 시작 버튼을 누르세요.'}
       </div>

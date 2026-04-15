@@ -5,10 +5,6 @@ import TrackingSim from '../components/TrackingSim'
 
 function Test3() {
   const navigate = useNavigate()
-  const [sensitivity, setSensitivity] = useState(() => {
-    const saved = localStorage.getItem('userSensitivity')
-    return saved ? parseFloat(saved) : 1
-  })
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem('themeMode') || 'system'
   })
@@ -25,6 +21,9 @@ function Test3() {
 
   const theme = resolveTheme(themeMode)
 
+  const userSetup = JSON.parse(localStorage.getItem('userSetup') || '{"dpi":800,"valorantSens":0.5,"eDPI":400}')
+  const sensitivityMultiplier = userSetup.eDPI / 400
+
   useEffect(() => {
     const handleThemeChange = (e) => {
       setThemeMode(e.detail)
@@ -36,11 +35,11 @@ function Test3() {
   }, [])
 
   const handleComplete = (data) => {
-    localStorage.setItem('userSensitivity', sensitivity.toString())
-    localStorage.setItem('themeMode', themeMode)
-    localStorage.setItem('test3Data', JSON.stringify({ ...data, sensitivity }))
+    localStorage.setItem('test3Data', JSON.stringify({ ...data, sensitivity: sensitivityMultiplier }))
     navigate('/result')
   }
+
+  const sub = theme === 'light' ? 'text-slate-500' : 'text-slate-400'
 
   return (
     <Layout isTestPage={true}>
@@ -49,7 +48,7 @@ function Test3() {
           theme === 'light' ? 'bg-white' : 'bg-slate-950/90'
         } w-full flex-1 flex items-center justify-center`}
       >
-        <TrackingSim onComplete={handleComplete} sensitivity={sensitivity} theme={theme} />
+        <TrackingSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} />
 
         <div className="absolute right-8 top-1/2 -translate-y-1/2 z-[1001] flex flex-col gap-4 items-end">
           <div
@@ -59,55 +58,41 @@ function Test3() {
                 : 'bg-slate-900/85 border-white/10 text-white'
             }`}
           >
-            <h2 className="m-0 mb-3 text-[#ff4655] font-bold text-2xl">Test 3: 트래킹</h2>
-            <p
-              className={`m-0 mb-2 ${
-                theme === 'light' ? 'text-slate-700' : 'text-slate-200'
-              }`}
-            >
-              움직이는 타겟을 조준점으로 따라가며 조준을 유지하세요.
+            <h2 className="m-0 mb-3 text-[#ff4655] font-bold text-2xl">Test 3: 탭샷</h2>
+            <p className={`m-0 mb-2 ${theme === 'light' ? 'text-slate-700' : 'text-slate-200'}`}>
+              순간적으로 등장하는 정지 타겟을 빠르게 조준하여 클릭하세요.
             </p>
-            <p
-              className={`m-0 text-sm ${
-                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
-              }`}
-            >
-              20초 동안 타겟을 얼마나 오래 정확하게 따라가는지로 트래킹 능력을 측정합니다.
+            <p className={`m-0 text-sm ${sub}`}>
+              총 20개 타겟, 각 1.5초 제한.<br />
+              발로란트의 멈추고 쏘는 탭샷 에임 정밀도와 반응속도를 측정합니다.
             </p>
           </div>
 
+          {/* 감도 정보 (읽기 전용) */}
           <div
-            className={`p-4 border backdrop-blur-md flex items-center gap-6 shadow-xl ${
+            className={`p-4 border backdrop-blur-md shadow-xl w-full ${
               theme === 'light' ? 'bg-white/95 border-slate-200' : 'bg-slate-900/90 border-white/10'
             }`}
           >
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">
-                Sensitivity
-              </span>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="0.1"
-                  max="5.0"
-                  step="0.1"
-                  value={sensitivity}
-                  onChange={(e) => setSensitivity(parseFloat(e.target.value))}
-                  className="w-32 accent-[#ff4655] cursor-pointer"
-                />
-                <input
-                  type="number"
-                  value={sensitivity}
-                  onChange={(e) =>
-                    setSensitivity(Math.max(0.1, parseFloat(e.target.value) || 0.1))
-                  }
-                  className={`w-16 border px-2 py-1 text-sm font-bold text-center ${
-                    theme === 'light'
-                      ? 'bg-white border-slate-300 text-slate-900'
-                      : 'bg-slate-800 border-white/10 text-white'
-                  }`}
-                  step="0.1"
-                />
+            <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>
+              현재 감도 설정
+            </p>
+            <div className="flex gap-6 justify-end">
+              <div className="text-right">
+                <p className={`text-[10px] ${sub}`}>DPI</p>
+                <p className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  {userSetup.dpi}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-[10px] ${sub}`}>감도</p>
+                <p className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  {userSetup.valorantSens}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-[10px] ${sub}`}>eDPI</p>
+                <p className="text-base font-black text-[#ff4655]">{userSetup.eDPI}</p>
               </div>
             </div>
           </div>
@@ -118,4 +103,3 @@ function Test3() {
 }
 
 export default Test3
-

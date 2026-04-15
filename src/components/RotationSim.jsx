@@ -86,6 +86,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
   const [hasFirstClick, setHasFirstClick] = useState(false)
   const containerRef = useRef(null)
   const cameraRef = useRef(null)
+  const startYawRef = useRef(0)
 
   const bg = theme === 'light' ? 'bg-white' : 'bg-slate-900'
 
@@ -138,6 +139,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
     if (clickCount === 0) {
         const camera = cameraRef.current
         if (camera) {
+            startYawRef.current = camera.rotation.y
             const dir = new THREE.Vector3()
             camera.getWorldDirection(dir)
             const distance = 5
@@ -155,7 +157,14 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
             document.exitPointerLock()
         }
         setStarted(false)
-        onComplete({ avgMovement: movement })
+        const camera = cameraRef.current
+        let deviationDeg = 0
+        if (camera) {
+            const totalRotation = camera.rotation.y - startYawRef.current
+            const deviationRad = Math.abs(Math.abs(totalRotation) - 2 * Math.PI)
+            deviationDeg = parseFloat((deviationRad * 180 / Math.PI).toFixed(1))
+        }
+        onComplete({ avgMovement: movement, deviationDeg })
       }
   }
 

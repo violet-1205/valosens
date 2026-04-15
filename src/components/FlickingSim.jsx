@@ -43,12 +43,23 @@ function Scene({ onScore, onMiss, sensitivity, active }) {
   const [targetPos, setTargetPos] = useState([0, 0, -5])
   const spawnTimeRef = useRef(null)
   const startRotRef = useRef(new THREE.Euler())
+  const sideRef = useRef(1) // 1 = 오른쪽, -1 = 왼쪽 교대 스폰
   const { camera, raycaster, scene } = useThree()
 
   const spawnTarget = useCallback(() => {
-    const rangeX = 1.8
-    const rangeY = 1.2
-    const newPos = [(Math.random() - 0.5) * 2 * rangeX, (Math.random() - 0.5) * 2 * rangeY, -5]
+    // 좌우 교대 (코너 피킹 시뮬레이션)
+    const side = sideRef.current
+    sideRef.current *= -1
+
+    // X: 코너 각도 범위 (중앙에서 벗어난 위치)
+    const minX = 0.7
+    const maxX = 2.2
+    const x = side * (minX + Math.random() * (maxX - minX))
+
+    // Y: 머리 높이 고정 (수직 랜덤성 최소화)
+    const headY = 0.15 + (Math.random() - 0.5) * 0.3
+
+    const newPos = [x, headY, -5]
     setTargetPos(newPos)
     spawnTimeRef.current = performance.now()
     startRotRef.current.copy(camera.rotation)
