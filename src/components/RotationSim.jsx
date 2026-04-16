@@ -60,16 +60,24 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
-      <ambientLight intensity={0.6} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      <gridHelper args={[40, 40, 0x444444, 0x222222]} position={[0, -2, 0]} />
+      <color attach="background" args={['#f5f0ea']} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
+      <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
+      {/* 깔끔한 바닥 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#e8e2da" roughness={0.85} metalness={0.0} />
+      </mesh>
       {markers.map((pos, index) => (
-        <mesh key={index} position={pos} userData={{ isMarker: true }}>
-          <sphereGeometry args={[0.3, 32, 32]} />
+        <mesh key={index} position={pos} userData={{ isMarker: true }} castShadow>
+          <sphereGeometry args={[0.3, 64, 64]} />
           <meshStandardMaterial
             color="#22c55e"
             emissive="#22c55e"
-            emissiveIntensity={0.8}
+            emissiveIntensity={0.15}
+            roughness={0.25}
+            metalness={0.1}
           />
         </mesh>
       ))}
@@ -88,7 +96,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
   const cameraRef = useRef(null)
   const startYawRef = useRef(0)
 
-  const bg = theme === 'light' ? 'bg-white' : 'bg-slate-900'
+  const bg = 'bg-[#f5f0ea]'
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -177,29 +185,25 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
       {!started && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
-            className={`text-center p-8 border shadow-2xl max-w-md ${
+            className={`text-center p-8 rounded-3xl border shadow-2xl max-w-md ${
               theme === 'light'
-                ? 'bg-white/95 border-slate-200 text-slate-900'
-                : 'bg-slate-800 border-white/10 text-white'
+                ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
+                : 'bg-[#1B2E3D] border-[#2A3D4F] text-[#ECE8E1]'
             }`}
           >
-            <h2
-              className={`text-3xl font-black mb-4 ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
-              }`}
-            >
+            <h2 className="text-3xl font-black mb-4">
               360° 회전 테스트
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
-                theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
               3D 환경에서 마우스를 움직여 360° 회전할 때의 실제 이동량을 측정합니다.
             </p>
             <p
               className={`mb-6 text-xs ${
-                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
               시작 지점을 클릭하고, 360° 회전 후 다시 같은 지점을 클릭하세요.
@@ -215,7 +219,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
                 setStarted(true)
                 requestLock()
               }}
-              className="px-10 py-4 bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all transform hover:scale-105 shadow-lg shadow-red-500/20"
+              className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
               테스트 시작
             </button>
@@ -226,7 +230,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
       {started && !isPointerLocked && (
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
-            <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 shadow-2xl">
+            <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
               화면을 클릭하여 마우스를 고정하세요
             </p>
           </div>
@@ -246,17 +250,17 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
       </div>
 
       {started && clickCount === 0 && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded backdrop-blur border border-white/20">
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded-xl backdrop-blur border border-white/20">
               시작 지점을 바라보고 클릭하세요
           </div>
       )}
       {started && clickCount === 1 && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-red-500/80 text-white font-bold text-sm rounded backdrop-blur shadow-lg animate-pulse">
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse">
               360도 회전 후 처음 지점을 다시 클릭하세요!
           </div>
       )}
 
-      <div className="absolute top-4 right-4 z-20 px-4 py-2 bg-black/50 text-white/80 text-xs border border-white/10 backdrop-blur flex flex-col gap-1 text-right">
+      <div className="absolute top-4 right-4 z-20 px-4 py-2 rounded-xl bg-black/50 text-white/80 text-xs border border-white/10 backdrop-blur flex flex-col gap-1 text-right">
         <div>
           <span className="text-slate-400 mr-1">현재 이동량</span>
           <span className="font-semibold text-white">{movement.toFixed(0)} px</span>

@@ -5,9 +5,7 @@ function Layout({ children, isTestPage = false }) {
   const navigate = useNavigate()
   const [themeMode, setThemeMode] = useState(() => {
     const saved = localStorage.getItem('themeMode')
-    if (saved === 'light' || saved === 'dark' || saved === 'system') {
-      return saved
-    }
+    if (saved === 'light' || saved === 'dark' || saved === 'system') return saved
     return 'system'
   })
   const [menuOpen, setMenuOpen] = useState(false)
@@ -19,230 +17,127 @@ function Layout({ children, isTestPage = false }) {
 
   const resolveTheme = (mode) => {
     if (mode === 'system') {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
-      return 'light'
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
     return mode
   }
 
   const theme = resolveTheme(themeMode)
+  const dark = theme === 'dark'
+
+  const themeOptions = [
+    {
+      key: 'light',
+      label: 'Light',
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2m-7.07-14.07 1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2m-4.34-7.07-1.41 1.41M6.34 17.66 4.93 19.07" />
+        </svg>
+      ),
+    },
+    {
+      key: 'dark',
+      label: 'Dark',
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'system',
+      label: 'System',
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <path d="M8 21h8M12 17v4" />
+        </svg>
+      ),
+    },
+  ]
+
+  const currentIcon = themeOptions.find((o) => o.key === themeMode)?.icon ?? themeOptions[2].icon
 
   return (
-    <div
-      className={`h-screen flex flex-col ${
-        theme === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50'
-      }`}
-    >
-      <div
-        className={`border-b backdrop-blur sticky top-0 z-40 ${
-          theme === 'light' ? 'border-slate-200 bg-white/90' : 'border-slate-800 bg-slate-950/90'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
+    <div className={`min-h-screen flex flex-col ${dark ? 'bg-[#0F1923] text-[#ECE8E1]' : 'bg-[#F5F0EA] text-[#1A1F2E]'}`}>
+      {/* Navbar */}
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${dark ? 'bg-[#0F1923]/90 border-[#2A3D4F]' : 'bg-[#F5F0EA]/90 border-[#DDD8D2]'}`}>
+        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-1 group"
           >
-            <span
-              className={`text-xl font-bold tracking-tight ${
-                theme === 'light' ? 'text-slate-900' : 'text-slate-50'
-              }`}
-            >
-              ValoSens
+            <span className="text-lg font-black tracking-tight">
+              <span className="text-[#FF4655]">Valo</span>
+              <span className={dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}>Sens</span>
             </span>
           </button>
-          <button
-            type="button"
-            className="relative flex items-center justify-center w-7 h-7 text-slate-600 hover:text-slate-900"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            {(() => {
-              const mode = themeMode === 'light' || themeMode === 'dark' ? themeMode : 'system'
-              if (mode === 'light') {
-                return (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-sun"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2" />
-                    <path d="M12 20v2" />
-                    <path d="m4.93 4.93 1.41 1.41" />
-                    <path d="m17.66 17.66 1.41 1.41" />
-                    <path d="M2 12h2" />
-                    <path d="M20 12h2" />
-                    <path d="m6.34 17.66-1.41 1.41" />
-                    <path d="m19.07 4.93-1.41 1.41" />
-                  </svg>
-                )
-              }
-              if (mode === 'dark') {
-                return (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-moon"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                  </svg>
-                )
-              }
-              return (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-laptop"
-                  aria-hidden="true"
-                >
-                  <path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z" />
-                  <path d="M20.054 15.987H3.946" />
-                </svg>
-              )
-            })()}
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-[52px] w-40 bg-white border border-slate-200 shadow-lg text-[12px] text-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setThemeMode('light')
-                  setMenuOpen(false)
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50"
-              >
-                <span className="w-3 text-center">
-                  {themeMode === 'light' ? '●' : ''}
-                </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-sun"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="m4.93 4.93 1.41 1.41" />
-                  <path d="m17.66 17.66 1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="m6.34 17.66-1.41 1.41" />
-                  <path d="m19.07 4.93-1.41 1.41" />
-                </svg>
-                <span>Light</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setThemeMode('dark')
-                  setMenuOpen(false)
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50"
-              >
-                <span className="w-3 text-center">
-                  {themeMode === 'dark' ? '●' : ''}
-                </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-moon"
-                  aria-hidden="true"
-                >
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-                <span>Dark</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setThemeMode('system')
-                  setMenuOpen(false)
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50"
-              >
-                <span className="w-3 text-center">
-                  {themeMode === 'system' ? '●' : ''}
-                </span>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-laptop"
-                  aria-hidden="true"
-                >
-                  <path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z" />
-                  <path d="M20.054 15.987H3.946" />
-                </svg>
-                <span>System</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      <main className="flex-1 w-full flex flex-col overflow-hidden">
-        {isTestPage ? (
-          <div className="flex-1 flex items-stretch overflow-hidden">
-            {children}
+
+          {/* Theme Toggle */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                dark
+                  ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]'
+                  : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#DDD8D2]'
+              }`}
+            >
+              {currentIcon}
+            </button>
+
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                <div className={`absolute right-0 top-10 z-20 w-36 rounded-2xl border shadow-xl overflow-hidden ${
+                  dark ? 'bg-[#1B2E3D] border-[#2A3D4F]' : 'bg-white border-[#DDD8D2]'
+                }`}>
+                  {themeOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => { setThemeMode(opt.key); setMenuOpen(false) }}
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                        themeMode === opt.key
+                          ? 'text-[#FF4655] font-semibold'
+                          : dark
+                          ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]/50'
+                          : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#F5F0EA]'
+                      }`}
+                    >
+                      {opt.icon}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="flex-1 w-full flex flex-col">
+        {isTestPage ? (
+          <div className="flex-1 flex items-stretch overflow-hidden">{children}</div>
         ) : (
-          <div className="w-full max-w-7xl mx-auto px-6 py-16">{children}</div>
+          <div className="w-full">{children}</div>
         )}
       </main>
-      <div
-        className={`border-t ${
-          theme === 'light' ? 'border-slate-200 bg-white/80' : 'border-slate-800 bg-slate-950/80'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between text-[11px]">
-          <span className={theme === 'light' ? 'text-slate-500' : 'text-slate-400'}>
-            © 2026 ValoSens. All rights reserved.
+
+      {/* Footer */}
+      <footer className={`border-t ${dark ? 'border-[#2A3D4F]' : 'border-[#DDD8D2]'}`}>
+        <div className="max-w-6xl mx-auto px-5 h-12 flex items-center justify-center">
+          <span className={`text-xs ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+            © 2026 ValoSens
           </span>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }
 
 export default Layout
-

@@ -27,40 +27,58 @@ function SetupModal({ theme, onClose, onConfirm }) {
     if (!isNaN(n) && n > 0) setDpi(n)
   }
 
-  const card = theme === 'light'
-    ? 'bg-white border-slate-200 text-slate-900'
-    : 'bg-slate-900 border-slate-700 text-white'
-  const sub = theme === 'light' ? 'text-slate-500' : 'text-slate-400'
-  const inp = theme === 'light'
-    ? 'bg-white border-slate-300 text-slate-900'
-    : 'bg-slate-800 border-slate-600 text-white'
-  const presetBase = 'px-3 py-1.5 text-sm font-bold border transition-all'
-  const presetActive = 'bg-[#ff4655] border-[#ff4655] text-white'
-  const presetInactive = theme === 'light'
-    ? 'border-slate-300 text-slate-600 hover:border-[#ff4655] hover:text-[#ff4655]'
-    : 'border-slate-600 text-slate-400 hover:border-[#ff4655] hover:text-[#ff4655]'
+  const dark = theme === 'dark'
+
+  const sensLevel =
+    eDPI < 100  ? { label: '초저감도', color: 'text-slate-400' } :
+    eDPI < 184  ? { label: '저감도',   color: 'text-blue-400' } :
+    eDPI < 268  ? { label: '중저감도', color: 'text-cyan-400' } :
+    eDPI < 352  ? { label: '중감도',   color: 'text-green-400' } :
+    eDPI < 436  ? { label: '중고감도', color: 'text-yellow-400' } :
+    eDPI < 520  ? { label: '고감도',   color: 'text-orange-400' } :
+                  { label: '초고감도', color: 'text-[#FF4655]' }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className={`w-full max-w-md border shadow-2xl p-8 ${card}`}>
-        {/* Header */}
-        <h2 className="text-2xl font-black mb-1">현재 감도 설정</h2>
-        <p className={`text-sm mb-8 ${sub}`}>
-          지금 발로란트에서 사용 중인 DPI와 인게임 감도를 입력하세요.
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className={`w-full max-w-md rounded-3xl border shadow-2xl p-7 ${
+        dark ? 'bg-[#1B2E3D] border-[#2A3D4F] text-[#ECE8E1]' : 'bg-white border-[#DDD8D2] text-[#1A1F2E]'
+      }`}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold">현재 사용 중인 감도를 입력해 주세요</h2>
+            <p className={`text-sm mt-0.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+              발로란트 인게임 설정 그대로 입력해 주세요
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-colors ${
+              dark ? 'text-[#768079] hover:bg-[#2A3D4F] hover:text-[#ECE8E1]' : 'text-[#7A7E85] hover:bg-[#F5F0EA] hover:text-[#1A1F2E]'
+            }`}
+          >
+            ×
+          </button>
+        </div>
 
         {/* DPI */}
-        <div className="mb-6">
-          <label className={`block text-xs font-bold uppercase tracking-widest mb-3 ${sub}`}>
-            DPI
+        <div className="mb-5">
+          <label className={`block text-xs font-semibold uppercase tracking-widest mb-2.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+            마우스 DPI
           </label>
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-2.5">
             {DPI_PRESETS.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => setDpi(preset)}
-                className={`${presetBase} ${dpi === preset ? presetActive : presetInactive}`}
+                className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
+                  dpi === preset
+                    ? 'bg-[#FF4655] border-[#FF4655] text-white'
+                    : dark
+                    ? 'border-[#2A3D4F] text-[#768079] hover:border-[#FF4655] hover:text-[#FF4655]'
+                    : 'border-[#DDD8D2] text-[#7A7E85] hover:border-[#FF4655] hover:text-[#FF4655]'
+                }`}
               >
                 {preset}
               </button>
@@ -70,26 +88,30 @@ function SetupModal({ theme, onClose, onConfirm }) {
             type="number"
             value={dpi}
             onChange={(e) => handleDpiInput(e.target.value)}
-            className={`w-full border px-3 py-2 text-sm font-bold ${inp}`}
+            className={`w-full rounded-xl border px-4 py-2.5 text-sm font-bold outline-none focus:border-[#FF4655] transition-colors ${
+              dark
+                ? 'bg-[#0F1923] border-[#2A3D4F] text-[#ECE8E1] placeholder-[#768079]'
+                : 'bg-[#F5F0EA] border-[#DDD8D2] text-[#1A1F2E] placeholder-[#7A7E85]'
+            }`}
             placeholder="직접 입력"
             min="100"
             max="32000"
           />
         </div>
 
-        {/* Valorant Sensitivity */}
-        <div className="mb-8">
-          <label className={`block text-xs font-bold uppercase tracking-widest mb-3 ${sub}`}>
-            발로란트 인게임 감도
+        {/* Sensitivity */}
+        <div className="mb-6">
+          <label className={`block text-xs font-semibold uppercase tracking-widest mb-2.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+            인게임 감도
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => handleSensChange((valorantSens - 0.01).toFixed(2))}
-              className={`w-10 h-10 flex items-center justify-center text-xl font-bold border transition-all ${
-                theme === 'light'
-                  ? 'border-slate-300 text-slate-600 hover:border-[#ff4655] hover:text-[#ff4655]'
-                  : 'border-slate-600 text-slate-400 hover:border-[#ff4655] hover:text-[#ff4655]'
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all ${
+                dark
+                  ? 'border-[#2A3D4F] text-[#768079] hover:border-[#FF4655] hover:text-[#FF4655]'
+                  : 'border-[#DDD8D2] text-[#7A7E85] hover:border-[#FF4655] hover:text-[#FF4655]'
               }`}
             >
               −
@@ -98,7 +120,11 @@ function SetupModal({ theme, onClose, onConfirm }) {
               type="number"
               value={valorantSens}
               onChange={(e) => handleSensChange(e.target.value)}
-              className={`flex-1 border px-3 py-2 text-center text-xl font-black ${inp}`}
+              className={`flex-1 rounded-xl border px-4 py-2.5 text-center text-xl font-black outline-none focus:border-[#FF4655] transition-colors ${
+                dark
+                  ? 'bg-[#0F1923] border-[#2A3D4F] text-[#ECE8E1]'
+                  : 'bg-[#F5F0EA] border-[#DDD8D2] text-[#1A1F2E]'
+              }`}
               step="0.01"
               min="0.01"
               max="10"
@@ -106,10 +132,10 @@ function SetupModal({ theme, onClose, onConfirm }) {
             <button
               type="button"
               onClick={() => handleSensChange((valorantSens + 0.01).toFixed(2))}
-              className={`w-10 h-10 flex items-center justify-center text-xl font-bold border transition-all ${
-                theme === 'light'
-                  ? 'border-slate-300 text-slate-600 hover:border-[#ff4655] hover:text-[#ff4655]'
-                  : 'border-slate-600 text-slate-400 hover:border-[#ff4655] hover:text-[#ff4655]'
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all ${
+                dark
+                  ? 'border-[#2A3D4F] text-[#768079] hover:border-[#FF4655] hover:text-[#FF4655]'
+                  : 'border-[#DDD8D2] text-[#7A7E85] hover:border-[#FF4655] hover:text-[#FF4655]'
               }`}
             >
               +
@@ -117,59 +143,81 @@ function SetupModal({ theme, onClose, onConfirm }) {
           </div>
         </div>
 
-        {/* Live Preview */}
-        <div className={`flex justify-between items-center mb-8 px-4 py-4 border ${
-          theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800 border-slate-700'
+        {/* Stats Preview */}
+        <div className={`rounded-2xl p-4 mb-6 flex justify-around ${
+          dark ? 'bg-[#0F1923]' : 'bg-[#F5F0EA]'
         }`}>
           <div className="text-center">
-            <p className={`text-xs uppercase tracking-widest mb-1 ${sub}`}>eDPI</p>
-            <p className="text-2xl font-black text-[#ff4655]">{eDPI}</p>
+            <p className={`text-xs mb-1 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>eDPI</p>
+            <p className="text-2xl font-black text-[#FF4655]">{eDPI}</p>
           </div>
-          <div className={`w-px h-10 ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-700'}`} />
+          <div className={`w-px ${dark ? 'bg-[#2A3D4F]' : 'bg-[#DDD8D2]'}`} />
           <div className="text-center">
-            <p className={`text-xs uppercase tracking-widest mb-1 ${sub}`}>cm / 360°</p>
-            <p className={`text-2xl font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-              {cmPer360}
-            </p>
+            <p className={`text-xs mb-1 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>cm/360°</p>
+            <p className={`text-2xl font-black ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>{cmPer360}</p>
           </div>
-          <div className={`w-px h-10 ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-700'}`} />
+          <div className={`w-px ${dark ? 'bg-[#2A3D4F]' : 'bg-[#DDD8D2]'}`} />
           <div className="text-center">
-            <p className={`text-xs uppercase tracking-widest mb-1 ${sub}`}>수준</p>
-            <p className={`text-sm font-bold ${
-              eDPI < 300 ? 'text-blue-400' :
-              eDPI < 500 ? 'text-green-400' :
-              eDPI < 800 ? 'text-yellow-400' : 'text-red-400'
-            }`}>
-              {eDPI < 300 ? '저감도' : eDPI < 500 ? '중저감도' : eDPI < 800 ? '중고감도' : '고감도'}
-            </p>
+            <p className={`text-xs mb-1 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>수준</p>
+            <p className={`text-base font-bold ${sensLevel.color}`}>{sensLevel.label}</p>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className={`flex-1 py-3 border font-bold text-sm transition-all ${
-              theme === 'light'
-                ? 'border-slate-300 text-slate-600 hover:bg-slate-50'
-                : 'border-slate-600 text-slate-400 hover:bg-slate-800'
-            }`}
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={() => onConfirm({ dpi, valorantSens, eDPI })}
-            className="flex-1 py-3 bg-[#ff4655] text-white font-bold text-sm hover:bg-[#ff4655]/90 transition-all"
-          >
-            이 감도로 테스트 시작
-          </button>
-        </div>
+        {/* Confirm */}
+        <button
+          type="button"
+          onClick={() => onConfirm({ dpi, valorantSens, eDPI })}
+          className="w-full py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base transition-all active:scale-[0.98]"
+        >
+          테스트 시작하기 →
+        </button>
       </div>
     </div>
   )
 }
+
+const tests = [
+  {
+    num: '01',
+    title: '360° 회전 정밀도',
+    desc: '한 바퀴 돌고 원점으로 돌아옵니다. 각도 편차로 얼마나 정확하게 돌아오는지 확인합니다.',
+    tag: '회전 제어',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 11a8 8 0 0 1 12.5-6.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 4.5H21v4.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13a8 8 0 0 1-12.5 6.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 19.5H3V15" />
+      </svg>
+    ),
+  },
+  {
+    num: '02',
+    title: '코너 플릭킹',
+    desc: '좌우로 튀어나오는 적을 빠르게 플릭합니다. 오버슈트/언더슈트 경향을 분석합니다.',
+    tag: '플릭 에임',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="2" />
+        <path strokeLinecap="round" d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+      </svg>
+    ),
+  },
+  {
+    num: '03',
+    title: '정지 타겟 탭샷',
+    desc: '1.5초 제한으로 20개 타겟을 클릭합니다. 탭샷 정확도와 반응속도를 동시에 측정합니다.',
+    tag: '탭샷 속도',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="3" />
+        <path strokeLinecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+        <path strokeLinecap="round" d="M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
+      </svg>
+    ),
+  },
+]
 
 function Home() {
   const navigate = useNavigate()
@@ -180,29 +228,22 @@ function Home() {
 
   const resolveTheme = (mode) => {
     if (mode === 'system') {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
-      return 'light'
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
     return mode
   }
 
   const theme = resolveTheme(themeMode)
+  const dark = theme === 'dark'
 
   useEffect(() => {
-    const handleThemeChange = (e) => {
-      setThemeMode(e.detail)
-    }
+    const handleThemeChange = (e) => setThemeMode(e.detail)
     window.addEventListener('theme-change', handleThemeChange)
-    return () => {
-      window.removeEventListener('theme-change', handleThemeChange)
-    }
+    return () => window.removeEventListener('theme-change', handleThemeChange)
   }, [])
 
   const handleConfirm = ({ dpi, valorantSens, eDPI }) => {
     localStorage.setItem('userSetup', JSON.stringify({ dpi, valorantSens, eDPI }))
-    // sensitivityMultiplier = eDPI / 400 (기준: eDPI 400 = multiplier 1.0)
     localStorage.setItem('userSensitivity', (eDPI / 400).toString())
     navigate('/test1')
   }
@@ -217,102 +258,120 @@ function Home() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-6 pt-16 pb-16 text-center">
-        <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 mb-4 mx-auto bg-slate-900 text-slate-200 shadow-sm">
-          <span className="w-2 h-2 bg-emerald-400" />
-          <span className="text-xs font-medium tracking-[0.16em] uppercase text-slate-300">
-            Valorant Sensitivity Lab
-          </span>
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-5 pt-20 pb-16 text-center">
+        <div className="max-w-2xl mx-auto animate-fade-up">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6 border text-xs font-semibold tracking-wide"
+            style={dark
+              ? { background: 'rgba(255,70,85,0.1)', borderColor: 'rgba(255,70,85,0.3)', color: '#FF4655' }
+              : { background: 'rgba(255,70,85,0.08)', borderColor: 'rgba(255,70,85,0.25)', color: '#BD3944' }
+            }
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4655] animate-pulse" />
+            발로란트 감도 측정 도구
+          </div>
+
+          {/* Title */}
+          <h1 className={`text-4xl md:text-5xl font-black leading-[1.15] mb-5 tracking-tight ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
+            지금 감도가<br />
+            <span className="text-[#FF4655]">진짜 맞는지</span><br />
+            확인해 보세요
+          </h1>
+
+          <p className={`text-base md:text-lg leading-relaxed mb-8 max-w-lg mx-auto ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+            회전 정밀도, 플릭, 탭샷 — 3가지 테스트로
+            지금 감도가 내 플레이 스타일에 맞는지 숫자로 확인해 보세요.
+          </p>
+
+          {/* CTA */}
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={() => setShowSetup(true)}
+              className="px-7 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base shadow-lg shadow-[#FF4655]/20 transition-all active:scale-[0.98] hover:-translate-y-0.5"
+            >
+              테스트 시작하기
+            </button>
+            <span className={`text-sm ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+              무료 · 3분 소요
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className={`max-w-6xl mx-auto px-5`}>
+        <div className={`h-px ${dark ? 'bg-[#2A3D4F]' : 'bg-[#DDD8D2]'}`} />
+      </div>
+
+      {/* Tests */}
+      <section className="max-w-6xl mx-auto px-5 py-16">
+        <div className="mb-10 text-center">
+          <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+            테스트 구성
+          </p>
+          <h2 className={`text-2xl font-bold ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
+            총 3단계로 측정합니다
+          </h2>
         </div>
 
-        <h1
-          className={`text-3xl md:text-4xl font-extrabold tracking-tight mb-3 leading-tight ${
-            theme === 'light' ? 'text-slate-900' : 'text-slate-50'
-          }`}
-        >
-          플레이어의 에임 성장을 위한 감도 측정 시뮬레이션
-        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {tests.map((t, i) => (
+            <div
+              key={t.num}
+              className={`rounded-3xl border p-6 transition-all duration-300 hover:-translate-y-1 ${
+                dark
+                  ? 'bg-[#1B2E3D] border-[#2A3D4F] hover:border-[#FF4655]/30 hover:shadow-xl hover:shadow-[#FF4655]/5'
+                  : 'bg-white border-[#DDD8D2] hover:border-[#FF4655]/30 hover:shadow-xl hover:shadow-black/5'
+              }`}
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              {/* Number + Icon */}
+              <div className="flex items-start justify-between mb-5">
+                <span className="text-4xl font-black text-[#FF4655]/20 leading-none select-none">{t.num}</span>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                  dark ? 'bg-[#FF4655]/10 text-[#FF4655]' : 'bg-[#FF4655]/8 text-[#FF4655]'
+                }`}>
+                  {t.icon}
+                </div>
+              </div>
 
-        <p
-          className={`text-base md:text-lg max-w-xl mx-auto mb-8 leading-relaxed ${
-            theme === 'light' ? 'text-slate-600' : 'text-slate-300'
-          }`}
-        >
-          3D 시뮬레이션으로 회전, 플릭, 탭샷을 각각 측정해서<br />
-          지금 감도와 플레이 스타일이 얼마나 맞는지 숫자로 확인해 보세요.
+              <h3 className={`text-base font-bold mb-2 ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
+                {t.title}
+              </h3>
+              <p className={`text-sm leading-relaxed mb-4 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+                {t.desc}
+              </p>
+
+              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                dark
+                  ? 'bg-[#2A3D4F] text-[#768079]'
+                  : 'bg-[#F5F0EA] text-[#7A7E85]'
+              }`}>
+                {t.tag}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className={`mx-5 mb-16 rounded-3xl p-10 text-center ${
+        dark ? 'bg-[#1B2E3D]' : 'bg-white border border-[#DDD8D2]'
+      }`}>
+        <h2 className={`text-xl font-bold mb-2 ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
+          지금 바로 시작해 보세요
+        </h2>
+        <p className={`text-sm mb-6 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+          DPI와 인게임 감도만 있으면 바로 시작하실 수 있습니다
         </p>
-
         <button
           onClick={() => setShowSetup(true)}
-          className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-normal shadow-lg hover:shadow-slate-700/40 transition-all duration-300 transform hover:-translate-y-0.5 text-lg"
+          className="px-8 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold transition-all active:scale-[0.98] hover:-translate-y-0.5 shadow-lg shadow-[#FF4655]/20"
         >
-          감도 측정 시뮬레이션 시작
+          감도 테스트 시작
         </button>
-      </div>
-
-      {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-24 grid grid-cols-1 md:grid-cols-3 gap-12">
-        <div
-          className={`p-8 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border ${
-            theme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
-          }`}
-        >
-          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
-            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 11a8 8 0 0 1 12.5-6.5" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.5 4.5H21v4.5" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13a8 8 0 0 1-12.5 6.5" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7.5 19.5H3V15" />
-            </svg>
-          </div>
-          <h3 className={`text-xl font-bold mb-4 ${theme === 'light' ? 'text-slate-900' : 'text-slate-50'}`}>
-            Test 1: 360° 회전 정밀도
-          </h3>
-          <p className={`leading-relaxed ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-            360° 회전 후 원점 복귀 정확도를 측정합니다. 각도 편차로 감도 제어력을 확인합니다.
-          </p>
-        </div>
-
-        <div
-          className={`p-8 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border ${
-            theme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
-          }`}
-        >
-          <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6">
-            <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="6" strokeWidth="2" />
-              <circle cx="12" cy="12" r="3" strokeWidth="2" />
-              <path strokeWidth="2" strokeLinecap="round" d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-            </svg>
-          </div>
-          <h3 className={`text-xl font-bold mb-4 ${theme === 'light' ? 'text-slate-900' : 'text-slate-50'}`}>
-            Test 2: 코너 플릭킹
-          </h3>
-          <p className={`leading-relaxed ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-            머리 높이 고정, 좌우 교대로 등장하는 타겟을 플릭합니다. 오버슈트/언더슈트 경향을 분석합니다.
-          </p>
-        </div>
-
-        <div
-          className={`p-8 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border ${
-            theme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
-          }`}
-        >
-          <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center mb-6">
-            <svg className="w-6 h-6 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3" strokeWidth="2" />
-              <path strokeWidth="2" strokeLinecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-              <path strokeWidth="2" strokeLinecap="round" d="M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
-            </svg>
-          </div>
-          <h3 className={`text-xl font-bold mb-4 ${theme === 'light' ? 'text-slate-900' : 'text-slate-50'}`}>
-            Test 3: 탭샷
-          </h3>
-          <p className={`leading-relaxed ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-            20개의 정지 타겟을 1.5초 제한 안에 클릭합니다. 탭샷 정확도와 반응속도를 측정합니다.
-          </p>
-        </div>
-      </div>
+      </section>
     </Layout>
   )
 }

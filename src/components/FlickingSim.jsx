@@ -1,13 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Target({ position }) {
   return (
-    <mesh position={position}>
-      <sphereGeometry args={[0.4, 32, 32]} />
-      <meshStandardMaterial color="#ff4655" emissive="#ff4655" emissiveIntensity={0.8} />
+    <mesh position={position} castShadow>
+      <sphereGeometry args={[0.4, 64, 64]} />
+      <meshStandardMaterial
+        color="#ff4655"
+        emissive="#ff4655"
+        emissiveIntensity={0.15}
+        roughness={0.25}
+        metalness={0.1}
+      />
     </mesh>
   )
 }
@@ -15,6 +21,7 @@ function Target({ position }) {
 function PlayerController({ sensitivityMultiplier = 1 }) {
   const { camera } = useThree()
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
+  const keys = useRef({ w: false, a: false, s: false, d: false })
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -36,10 +43,50 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [camera, handleMouseMove])
 
+  useEffect(() => {
+    const down = (e) => {
+      const k = e.key.toLowerCase()
+      if (k === 'w' || k === 'arrowup')    keys.current.w = true
+      if (k === 'a' || k === 'arrowleft')  keys.current.a = true
+      if (k === 's' || k === 'arrowdown')  keys.current.s = true
+      if (k === 'd' || k === 'arrowright') keys.current.d = true
+    }
+    const up = (e) => {
+      const k = e.key.toLowerCase()
+      if (k === 'w' || k === 'arrowup')    keys.current.w = false
+      if (k === 'a' || k === 'arrowleft')  keys.current.a = false
+      if (k === 's' || k === 'arrowdown')  keys.current.s = false
+      if (k === 'd' || k === 'arrowright') keys.current.d = false
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  }, [])
+
+  useFrame(() => {
+    if (!document.pointerLockElement) return
+    const { w, a, s, d } = keys.current
+    if (!w && !a && !s && !d) return
+    const speed = 0.08
+    const forward = new THREE.Vector3()
+    camera.getWorldDirection(forward)
+    forward.y = 0
+    forward.normalize()
+    const right = new THREE.Vector3()
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0))
+    if (w) camera.position.addScaledVector(forward, speed)
+    if (s) camera.position.addScaledVector(forward, -speed)
+    if (a) camera.position.addScaledVector(right, -speed)
+    if (d) camera.position.addScaledVector(right, speed)
+  })
+
   return null
 }
 
-function Scene({ onScore, onMiss, sensitivity, active }) {
+function Scene({ onScore, onMiss, sensitivity, active, movingRef }) {
   const [targetPos, setTargetPos] = useState([0, 0, -5])
   const spawnTimeRef = useRef(null)
   const startRotRef = useRef(new THREE.Euler())
@@ -67,6 +114,7 @@ function Scene({ onScore, onMiss, sensitivity, active }) {
 
   const handleShot = useCallback(() => {
     if (!active) return
+    if (movingRef?.current) return
     raycaster.setFromCamera({ x: 0, y: 0 }, camera)
     const intersects = raycaster.intersectObjects(scene.children, true)
     const targetHit = intersects.find(
@@ -160,11 +208,15 @@ function Scene({ onScore, onMiss, sensitivity, active }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} />
-      
-      <gridHelper args={[50, 50, 0x444444, 0x222222]} position={[0, -2, 0]} />
-      
+      <color attach="background" args={['#f5f0ea']} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
+      <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
+      {/* 깔끔한 바닥 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#e8e2da" roughness={0.85} metalness={0.0} />
+      </mesh>
       <Target position={targetPos} />
     </>
   )
@@ -180,8 +232,9 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
   const containerRef = useRef(null)
   
   const statsRef = useRef([])
+  const movingRef = useRef(false)
 
-  const bg = theme === 'light' ? 'bg-white' : 'bg-slate-900'
+  const bg = 'bg-[#f5f0ea]'
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -189,6 +242,18 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
     }
     document.addEventListener('pointerlockchange', handleLockChange)
     return () => document.removeEventListener('pointerlockchange', handleLockChange)
+  }, [])
+
+  useEffect(() => {
+    const moveKeys = new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'])
+    const down = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = true }
+    const up   = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = false }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
   }, [])
 
   const requestLock = () => {
@@ -274,29 +339,25 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
       {!started && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
-            className={`text-center p-8 border shadow-2xl max-w-md ${
+            className={`text-center p-8 rounded-3xl border shadow-2xl max-w-md ${
               theme === 'light'
-                ? 'bg-white/95 border-slate-200 text-slate-900'
-                : 'bg-slate-800 border-white/10 text-white'
+                ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
+                : 'bg-[#1B2E3D] border-[#2A3D4F] text-[#ECE8E1]'
             }`}
           >
-            <h2
-              className={`text-3xl font-black mb-4 ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
-              }`}
-            >
+            <h2 className="text-3xl font-black mb-4">
               플릭킹 테스트
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
-                theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
               화면 곳곳에 나타나는 타겟을 빠르고 정확하게 클릭하는 능력을 측정합니다.
             </p>
             <p
               className={`mb-6 text-xs ${
-                theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+                theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
               30초 동안 최대한 많은 타겟을 맞춰보세요.
@@ -313,7 +374,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
                 statsRef.current = []
                 requestLock()
               }}
-              className="px-10 py-4 bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all transform hover:scale-105 shadow-lg shadow-red-500/20"
+              className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
               테스트 시작
             </button>
@@ -324,7 +385,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
       {started && !isPointerLocked && (
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
-            <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 shadow-2xl">
+            <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
               화면을 클릭하여 마우스를 고정하세요
             </p>
           </div>
@@ -343,7 +404,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       </div>
 
-      <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 backdrop-blur-md border border-white/15 text-right shadow-lg">
+      <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 rounded-2xl backdrop-blur-md border border-white/15 text-right shadow-lg">
         <div className="flex justify-between gap-4">
           <span className="text-slate-400">Targets</span>
           <span className="font-bold text-[#ff4655]">{score}</span>
@@ -377,12 +438,13 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
               }}
               sensitivity={sensitivity}
               active={countdown === 0}
+              movingRef={movingRef}
             />
           </>
         )}
       </Canvas>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 backdrop-blur-md border border-white/10">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 rounded-xl backdrop-blur-md border border-white/10">
         {started
           ? countdown > 0
             ? '3, 2, 1 카운트다운 이후에 타겟이 나타납니다.'

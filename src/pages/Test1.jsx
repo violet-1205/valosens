@@ -46,17 +46,17 @@ function Test1() {
     <Layout isTestPage={true}>
       <div
         className={`relative overflow-hidden ${
-          theme === 'light' ? 'bg-white' : 'bg-slate-950/90'
+          theme === 'light' ? 'bg-[#F5F0EA]' : 'bg-[#0F1923]'
         } w-full flex-1 flex items-center justify-center`}
       >
         <RotationSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} />
 
         <div className="absolute right-8 top-1/2 -translate-y-1/2 z-[1002] flex flex-col gap-4 items-end">
           <div
-            className={`p-6 max-w-[440px] backdrop-blur-md border shadow-lg pointer-events-none ${
+            className={`p-6 max-w-[440px] rounded-3xl backdrop-blur-md border shadow-xl pointer-events-none ${
               theme === 'light'
-                ? 'bg-white/95 border-slate-200 text-slate-900'
-                : 'bg-slate-900/85 border-white/10 text-white'
+                ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
+                : 'bg-[#1B2E3D]/90 border-[#2A3D4F] text-[#ECE8E1]'
             }`}
           >
             <h2 className="m-0 mb-3 text-[#ff4655] font-bold text-2xl">
@@ -75,8 +75,8 @@ function Test1() {
 
           {/* 감도 정보 (읽기 전용) */}
           <div
-            className={`p-4 border backdrop-blur-md shadow-xl w-full ${
-              theme === 'light' ? 'bg-white/95 border-slate-200' : 'bg-slate-900/90 border-white/10'
+            className={`p-4 rounded-2xl border backdrop-blur-md shadow-xl w-full ${
+              theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
             }`}
           >
             <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>
