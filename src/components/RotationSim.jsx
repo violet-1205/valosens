@@ -30,7 +30,7 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
   return null
 }
 
-function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick }) {
+function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme = 'dark' }) {
   const { camera, raycaster, scene } = useThree()
 
   useEffect(() => {
@@ -60,15 +60,10 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
-      <color attach="background" args={['#f5f0ea']} />
+      <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
       <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
-      {/* 깔끔한 바닥 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#e8e2da" roughness={0.85} metalness={0.0} />
-      </mesh>
       {markers.map((pos, index) => (
         <mesh key={index} position={pos} userData={{ isMarker: true }} castShadow>
           <sphereGeometry args={[0.3, 64, 64]} />
@@ -96,7 +91,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
   const cameraRef = useRef(null)
   const startYawRef = useRef(0)
 
-  const bg = 'bg-[#f5f0ea]'
+  const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -278,6 +273,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
                 cameraRef.current = camera
               }}
               onSphereClick={handleSphereClick}
+              theme={theme}
             />
           </>
         )}

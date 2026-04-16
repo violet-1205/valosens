@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -21,7 +21,6 @@ function Target({ position }) {
 function PlayerController({ sensitivityMultiplier = 1 }) {
   const { camera } = useThree()
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
-  const keys = useRef({ w: false, a: false, s: false, d: false })
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -43,50 +42,10 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [camera, handleMouseMove])
 
-  useEffect(() => {
-    const down = (e) => {
-      const k = e.key.toLowerCase()
-      if (k === 'w' || k === 'arrowup')    keys.current.w = true
-      if (k === 'a' || k === 'arrowleft')  keys.current.a = true
-      if (k === 's' || k === 'arrowdown')  keys.current.s = true
-      if (k === 'd' || k === 'arrowright') keys.current.d = true
-    }
-    const up = (e) => {
-      const k = e.key.toLowerCase()
-      if (k === 'w' || k === 'arrowup')    keys.current.w = false
-      if (k === 'a' || k === 'arrowleft')  keys.current.a = false
-      if (k === 's' || k === 'arrowdown')  keys.current.s = false
-      if (k === 'd' || k === 'arrowright') keys.current.d = false
-    }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
-  }, [])
-
-  useFrame(() => {
-    if (!document.pointerLockElement) return
-    const { w, a, s, d } = keys.current
-    if (!w && !a && !s && !d) return
-    const speed = 0.08
-    const forward = new THREE.Vector3()
-    camera.getWorldDirection(forward)
-    forward.y = 0
-    forward.normalize()
-    const right = new THREE.Vector3()
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0))
-    if (w) camera.position.addScaledVector(forward, speed)
-    if (s) camera.position.addScaledVector(forward, -speed)
-    if (a) camera.position.addScaledVector(right, -speed)
-    if (d) camera.position.addScaledVector(right, speed)
-  })
-
   return null
 }
 
-function Scene({ onScore, onMiss, sensitivity, active, movingRef }) {
+function Scene({ onScore, onMiss, sensitivity, active, theme = 'dark' }) {
   const [targetPos, setTargetPos] = useState([0, 0, -5])
   const spawnTimeRef = useRef(null)
   const startRotRef = useRef(new THREE.Euler())
@@ -114,7 +73,6 @@ function Scene({ onScore, onMiss, sensitivity, active, movingRef }) {
 
   const handleShot = useCallback(() => {
     if (!active) return
-    if (movingRef?.current) return
     raycaster.setFromCamera({ x: 0, y: 0 }, camera)
     const intersects = raycaster.intersectObjects(scene.children, true)
     const targetHit = intersects.find(
@@ -208,15 +166,10 @@ function Scene({ onScore, onMiss, sensitivity, active, movingRef }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
-      <color attach="background" args={['#f5f0ea']} />
+      <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
       <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
-      {/* 깔끔한 바닥 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#e8e2da" roughness={0.85} metalness={0.0} />
-      </mesh>
       <Target position={targetPos} />
     </>
   )
@@ -232,9 +185,8 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
   const containerRef = useRef(null)
   
   const statsRef = useRef([])
-  const movingRef = useRef(false)
 
-  const bg = 'bg-[#f5f0ea]'
+  const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -242,18 +194,6 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
     }
     document.addEventListener('pointerlockchange', handleLockChange)
     return () => document.removeEventListener('pointerlockchange', handleLockChange)
-  }, [])
-
-  useEffect(() => {
-    const moveKeys = new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'])
-    const down = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = true }
-    const up   = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = false }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
   }, [])
 
   const requestLock = () => {
@@ -438,7 +378,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
               }}
               sensitivity={sensitivity}
               active={countdown === 0}
-              movingRef={movingRef}
+              theme={theme}
             />
           </>
         )}

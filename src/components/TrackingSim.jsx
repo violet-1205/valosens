@@ -4,12 +4,11 @@ import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
 const TOTAL_TARGETS = 20
-const TIME_LIMIT_MS = 1500
+const TIME_LIMIT_MS = 500
 
 function PlayerController({ sensitivityMultiplier = 1 }) {
   const { camera } = useThree()
   const rotation = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
-  const keys = useRef({ w: false, a: false, s: false, d: false })
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -31,51 +30,11 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [camera, handleMouseMove])
 
-  useEffect(() => {
-    const down = (e) => {
-      const k = e.key.toLowerCase()
-      if (k === 'w' || k === 'arrowup')    keys.current.w = true
-      if (k === 'a' || k === 'arrowleft')  keys.current.a = true
-      if (k === 's' || k === 'arrowdown')  keys.current.s = true
-      if (k === 'd' || k === 'arrowright') keys.current.d = true
-    }
-    const up = (e) => {
-      const k = e.key.toLowerCase()
-      if (k === 'w' || k === 'arrowup')    keys.current.w = false
-      if (k === 'a' || k === 'arrowleft')  keys.current.a = false
-      if (k === 's' || k === 'arrowdown')  keys.current.s = false
-      if (k === 'd' || k === 'arrowright') keys.current.d = false
-    }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
-  }, [])
-
-  useFrame(() => {
-    if (!document.pointerLockElement) return
-    const { w, a, s, d } = keys.current
-    if (!w && !a && !s && !d) return
-    const speed = 0.08
-    const forward = new THREE.Vector3()
-    camera.getWorldDirection(forward)
-    forward.y = 0
-    forward.normalize()
-    const right = new THREE.Vector3()
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0))
-    if (w) camera.position.addScaledVector(forward, speed)
-    if (s) camera.position.addScaledVector(forward, -speed)
-    if (a) camera.position.addScaledVector(right, -speed)
-    if (d) camera.position.addScaledVector(right, speed)
-  })
-
   return null
 }
 
 // 정지 타겟 - 일정 시간 후 자동 소멸, 클릭 시 hit 판정
-function TappingTarget({ position, timeLimit, onHit, onMiss, movingRef }) {
+function TappingTarget({ position, timeLimit, onHit, onMiss }) {
   const meshRef = useRef(null)
   const spawnTime = useRef(performance.now())
   const resolved = useRef(false)
@@ -91,7 +50,6 @@ function TappingTarget({ position, timeLimit, onHit, onMiss, movingRef }) {
 
   const handleMouseDown = useCallback(() => {
     if (resolved.current || !meshRef.current) return
-    if (movingRef?.current) return
     raycaster.setFromCamera({ x: 0, y: 0 }, camera)
     const intersects = raycaster.intersectObject(meshRef.current)
     if (intersects.length > 0) {
@@ -119,19 +77,14 @@ function TappingTarget({ position, timeLimit, onHit, onMiss, movingRef }) {
   )
 }
 
-function Scene({ onHit, onMiss, sensitivity, targetPos, targetKey, active, movingRef }) {
+function Scene({ onHit, onMiss, sensitivity, targetPos, targetKey, active, theme = 'dark' }) {
   return (
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
-      <color attach="background" args={['#f5f0ea']} />
+      <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
       <ambientLight intensity={0.7} />
       <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
       <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
-      {/* 깔끔한 바닥 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#e8e2da" roughness={0.85} metalness={0.0} />
-      </mesh>
       {active && targetPos && (
         <TappingTarget
           key={targetKey}
@@ -139,7 +92,6 @@ function Scene({ onHit, onMiss, sensitivity, targetPos, targetKey, active, movin
           timeLimit={TIME_LIMIT_MS}
           onHit={onHit}
           onMiss={onMiss}
-          movingRef={movingRef}
         />
       )}
     </>
@@ -159,9 +111,8 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
   const hitsRef = useRef(0)
   const reactionTimesRef = useRef([])
   const firstSpawnDoneRef = useRef(false)
-  const movingRef = useRef(false)
 
-  const bg = 'bg-[#f5f0ea]'
+  const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
   const spawnTarget = useCallback(() => {
     // 발로란트 실전 에임 범위: 머리 높이 중심, 수평 분포
@@ -198,18 +149,6 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
     }
     document.addEventListener('pointerlockchange', handleLockChange)
     return () => document.removeEventListener('pointerlockchange', handleLockChange)
-  }, [])
-
-  useEffect(() => {
-    const moveKeys = new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'])
-    const down = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = true }
-    const up   = (e) => { if (moveKeys.has(e.key.toLowerCase())) movingRef.current = false }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
   }, [])
 
   const requestLock = () => {
@@ -283,7 +222,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
               }`}
             >
               나타나는 정지 타겟을 빠르게 조준하여 클릭하세요.
-              각 타겟은 <span className="text-[#ff4655] font-bold">1.5초</span> 후 사라집니다.
+              각 타겟은 <span className="text-[#ff4655] font-bold">0.5초</span> 후 사라집니다.
             </p>
             <p
               className={`mb-6 text-xs ${
@@ -384,7 +323,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
               targetPos={targetPos}
               targetKey={targetKey}
               active={currentIndex < TOTAL_TARGETS}
-              movingRef={movingRef}
+              theme={theme}
             />
           </>
         )}
