@@ -65,17 +65,17 @@ function Layout({ children, isTestPage = false }) {
     localStorage.setItem('soundVolume', volume.toString())
   }, [volume])
 
-  // Close volume popup on outside click
+  // Close popups on outside click
+  const menuRef = useRef(null)
   useEffect(() => {
-    if (!volOpen) return
+    if (!volOpen && !menuOpen) return
     const handler = (e) => {
-      if (volRef.current && !volRef.current.contains(e.target)) {
-        setVolOpen(false)
-      }
+      if (volRef.current && !volRef.current.contains(e.target)) setVolOpen(false)
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [volOpen])
+  }, [volOpen, menuOpen])
 
   /* ── Theme options ───────────────────────────────────────────── */
   const themeOptions = [
@@ -129,7 +129,7 @@ function Layout({ children, isTestPage = false }) {
           <div className="flex items-center gap-0.5">
 
             {/* ── Theme Toggle ─────────────────────────────────── */}
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 type="button"
                 onClick={() => { setMenuOpen((v) => !v); setVolOpen(false) }}
@@ -143,32 +143,33 @@ function Layout({ children, isTestPage = false }) {
               </button>
 
               {/* Theme dropdown */}
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className={`absolute right-0 top-10 z-20 w-36 rounded-2xl border shadow-xl overflow-hidden ${
-                    dark ? 'bg-[#1B2E3D] border-[#2A3D4F]' : 'bg-white border-[#DDD8D2]'
-                  }`}>
-                    {themeOptions.map((opt) => (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => { setThemeMode(opt.key); setMenuOpen(false) }}
-                        className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
-                          themeMode === opt.key
-                            ? 'text-[#FF4655] font-semibold'
-                            : dark
-                            ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]/50'
-                            : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#F5F0EA]'
-                        }`}
-                      >
-                        {opt.icon}
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+              <div
+                className={`absolute right-0 top-11 z-20 w-36 rounded-2xl border shadow-xl overflow-hidden
+                  transition-all duration-200 ease-out origin-top-right
+                  ${dark ? 'bg-[#1B2E3D] border-[#2A3D4F]' : 'bg-white border-[#DDD8D2]'}
+                  ${menuOpen
+                    ? 'opacity-100 scale-100 translate-y-0'
+                    : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'
+                  }`}
+              >
+                {themeOptions.map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => { setThemeMode(opt.key); setMenuOpen(false) }}
+                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                      themeMode === opt.key
+                        ? 'text-[#FF4655] font-semibold'
+                        : dark
+                        ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]/50'
+                        : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#F5F0EA]'
+                    }`}
+                  >
+                    {opt.icon}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* ── Volume Button ─────────────────────────────────── */}
