@@ -13,13 +13,37 @@ function SetupModal({ theme, onClose, onConfirm }) {
     const saved = localStorage.getItem('userSetup')
     return saved ? JSON.parse(saved).valorantSens : 0.5
   })
+  // 입력 중 중간 상태("0.0", "0." 등)를 허용하기 위한 별도 문자열 상태
+  const [sensInput, setSensInput] = useState(() => {
+    const saved = localStorage.getItem('userSetup')
+    return saved ? String(JSON.parse(saved).valorantSens) : '0.5'
+  })
 
-  const eDPI = Math.round(dpi * valorantSens)
-  const cmPer360 = (360 / (valorantSens * 0.07 * dpi / 2.54)).toFixed(1)
+  const parsedSens = parseFloat(sensInput)
+  const validSens = isNaN(parsedSens) ? valorantSens : Math.max(0.01, Math.min(10, parsedSens))
 
+  const eDPI = Math.round(dpi * validSens)
+  const cmPer360 = (360 / (validSens * 0.07 * dpi / 2.54)).toFixed(1)
+
+  // 입력 중: 문자열 그대로 허용 (0.0, 0. 같은 중간값 가능)
   const handleSensChange = (val) => {
+    setSensInput(val)
     const n = parseFloat(val)
-    if (!isNaN(n)) setValorantSens(Math.max(0.01, Math.min(10, n)))
+    if (!isNaN(n) && n >= 0.01) setValorantSens(Math.min(10, n))
+  }
+
+  // 포커스 아웃 시: 유효 범위로 클램프 후 정규화
+  const handleSensBlur = () => {
+    const clamped = Math.max(0.01, Math.min(10, isNaN(parsedSens) ? valorantSens : parsedSens))
+    setValorantSens(clamped)
+    setSensInput(String(clamped))
+  }
+
+  // +/- 버튼: 숫자 기준으로 증감
+  const stepSens = (delta) => {
+    const next = Math.max(0.01, Math.min(10, parseFloat((validSens + delta).toFixed(2))))
+    setValorantSens(next)
+    setSensInput(String(next))
   }
 
   const handleDpiInput = (val) => {
@@ -107,7 +131,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => handleSensChange((valorantSens - 0.01).toFixed(2))}
+              onClick={() => stepSens(-0.01)}
               className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all ${
                 dark
                   ? 'border-[#2A3D4F] text-[#768079] hover:border-[#FF4655] hover:text-[#FF4655]'
@@ -118,8 +142,9 @@ function SetupModal({ theme, onClose, onConfirm }) {
             </button>
             <input
               type="number"
-              value={valorantSens}
+              value={sensInput}
               onChange={(e) => handleSensChange(e.target.value)}
+              onBlur={handleSensBlur}
               className={`flex-1 rounded-xl border px-4 py-2.5 text-center text-xl font-black outline-none focus:border-[#FF4655] transition-colors ${
                 dark
                   ? 'bg-[#0F1923] border-[#2A3D4F] text-[#ECE8E1]'
@@ -131,7 +156,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
             />
             <button
               type="button"
-              onClick={() => handleSensChange((valorantSens + 0.01).toFixed(2))}
+              onClick={() => stepSens(0.01)}
               className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border transition-all ${
                 dark
                   ? 'border-[#2A3D4F] text-[#768079] hover:border-[#FF4655] hover:text-[#FF4655]'
@@ -166,7 +191,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
         {/* Confirm */}
         <button
           type="button"
-          onClick={() => onConfirm({ dpi, valorantSens, eDPI })}
+          onClick={() => onConfirm({ dpi, valorantSens: validSens, eDPI })}
           className="w-full py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base transition-all active:scale-[0.98]"
         >
           테스트 시작하기 →
