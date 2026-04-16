@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { playHit, playMiss } from '../utils/sounds'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
@@ -124,6 +125,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
 
   const handleHit = useCallback(
     (reactionTime) => {
+      playHit()
       hitsRef.current += 1
       reactionTimesRef.current.push(reactionTime)
       currentIndexRef.current += 1
@@ -136,6 +138,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
   )
 
   const handleMiss = useCallback(() => {
+    playMiss()
     currentIndexRef.current += 1
     setCurrentIndex(currentIndexRef.current)
     if (currentIndexRef.current < TOTAL_TARGETS) {

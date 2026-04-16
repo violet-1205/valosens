@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { playConfirm, playComplete } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
@@ -150,12 +151,14 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
             setMarkers([worldPos.toArray()])
             setClickCount(1)
             setMovement(0)
+            playConfirm()
         }
     }
   }
 
   const handleSphereClick = () => {
       if (clickCount === 1) {
+        playComplete()
         if (document.pointerLockElement) {
             document.exitPointerLock()
         }

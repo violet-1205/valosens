@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { playHit, playMiss } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
@@ -369,10 +370,12 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
             <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
             <Scene
               onScore={(data) => {
+                playHit()
                 setScore((s) => s + 1)
                 statsRef.current.push(data)
               }}
               onMiss={(data) => {
+                playMiss()
                 setMisses((m) => m + 1)
                 statsRef.current.push(data)
               }}
