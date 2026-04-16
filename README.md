@@ -111,6 +111,14 @@ npm run build
 npm run preview
 ```
 
+
+---
+
+## Architecture Diagram
+
+<img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/f759b049-fa5a-467d-8af4-0fb670635767" />
+
+
 ---
 
 ## Data Persistence
