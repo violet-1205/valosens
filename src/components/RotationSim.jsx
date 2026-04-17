@@ -89,7 +89,7 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme 
   )
 }
 
-export default function RotationSim({ onComplete, sensitivity, theme = 'dark' }) {
+export default function RotationSim({ onComplete, sensitivity, theme = 'dark', onMovementChange }) {
   const [movement, setMovement] = useState(0)
   const [started, setStarted] = useState(false)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
@@ -101,6 +101,10 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
   const startYawRef = useRef(0)
 
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
+
+  useEffect(() => {
+    onMovementChange?.(movement)
+  }, [movement, onMovementChange])
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -255,13 +259,6 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
               360도 회전 후 처음 지점을 다시 클릭하세요!
           </div>
       )}
-
-      <div className="absolute top-4 right-4 z-20 px-4 py-2 rounded-xl bg-black/50 text-white/80 text-xs border border-white/10 backdrop-blur flex flex-col gap-1 text-right">
-        <div>
-          <span className="text-slate-400 mr-1">현재 이동량</span>
-          <span className="font-semibold text-white">{movement.toFixed(0)} px</span>
-        </div>
-      </div>
 
       <Canvas shadows camera={{ position: [0, 0, 0], fov: 75 }}>
         {started && (

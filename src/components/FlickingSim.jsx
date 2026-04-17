@@ -178,7 +178,7 @@ function Scene({ onScore, onMiss, sensitivity, active, theme = 'dark' }) {
   )
 }
 
-export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' }) {
+export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', onStatsChange }) {
   const [score, setScore] = useState(0)
   const [misses, setMisses] = useState(0)
   const [timeLeft, setTimeLeft] = useState(30)
@@ -190,6 +190,10 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
   const statsRef = useRef([])
 
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
+
+  useEffect(() => {
+    onStatsChange?.({ score, timeLeft })
+  }, [score, timeLeft, onStatsChange])
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -336,17 +340,6 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
       )}
 
       <Crosshair visible={started && countdown === 0 && isPointerLocked} />
-
-      <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 rounded-2xl backdrop-blur-md border border-white/15 text-right shadow-lg">
-        <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Targets</span>
-          <span className="font-bold text-[#ff4655]">{score}</span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Time</span>
-          <span className="font-bold text-red-400">{timeLeft}s</span>
-        </div>
-      </div>
 
       {started && countdown > 0 && (
         <div className="absolute inset-0 z-[26] flex items-center justify-center bg-black/60">

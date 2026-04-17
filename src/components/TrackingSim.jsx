@@ -101,8 +101,9 @@ function Scene({ onHit, onMiss, sensitivity, targetPos, targetKey, active, theme
   )
 }
 
-export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' }) {
+export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', onStatsChange }) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [hitsCount, setHitsCount] = useState(0)
   const [targetPos, setTargetPos] = useState(null)
   const [targetKey, setTargetKey] = useState(0)
   const [started, setStarted] = useState(false)
@@ -117,6 +118,10 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
 
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
+  useEffect(() => {
+    onStatsChange?.({ hits: hitsCount, currentIndex, total: TOTAL_TARGETS })
+  }, [hitsCount, currentIndex, onStatsChange])
+
   const spawnTarget = useCallback(() => {
     // 발로란트 실전 에임 범위: 머리 높이 중심, 수평 분포
     const x = (Math.random() - 0.5) * 4.0   // -2 ~ 2
@@ -129,6 +134,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
     (reactionTime) => {
       playHit()
       hitsRef.current += 1
+      setHitsCount(hitsRef.current)
       reactionTimesRef.current.push(reactionTime)
       currentIndexRef.current += 1
       setCurrentIndex(currentIndexRef.current)
@@ -292,20 +298,6 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark' })
           />
         </div>
       )}
-
-      {/* HUD */}
-      <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 rounded-2xl backdrop-blur-md border border-white/15 text-right shadow-lg">
-        <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Target</span>
-          <span className="font-bold text-[#ff4655]">
-            {Math.min(currentIndex + 1, TOTAL_TARGETS)} / {TOTAL_TARGETS}
-          </span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-slate-400">Hits</span>
-          <span className="font-bold text-green-400">{hitsRef.current}</span>
-        </div>
-      </div>
 
       <Canvas shadows camera={{ position: [0, 0, 0], fov: 75 }}>
         {started && countdown === 0 && (

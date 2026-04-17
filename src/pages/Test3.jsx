@@ -34,6 +34,8 @@ function Test3() {
     }
   }, [])
 
+  const [stats, setStats] = useState({ hits: 0, currentIndex: 0, total: 20 })
+
   const handleComplete = (data) => {
     localStorage.setItem('test3Data', JSON.stringify({ ...data, sensitivity: sensitivityMultiplier }))
     navigate('/result')
@@ -48,9 +50,31 @@ function Test3() {
           theme === 'light' ? 'bg-[#F5F0EA]' : 'bg-[#0F1923]'
         } w-full flex-1 flex items-center justify-center`}
       >
-        <TrackingSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} />
+        <TrackingSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} onStatsChange={setStats} />
 
         <div className="absolute right-8 top-1/2 -translate-y-1/2 z-[1001] flex flex-col gap-4 items-end">
+
+          {/* HUD — Target / Hits */}
+          <div
+            className={`p-4 rounded-2xl border backdrop-blur-md shadow-xl w-full pointer-events-none ${
+              theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
+            }`}
+          >
+            <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>현재 현황</p>
+            <div className="flex gap-6 justify-end">
+              <div className="text-right">
+                <p className={`text-[10px] ${sub}`}>Target</p>
+                <p className="text-base font-black text-[#ff4655]">
+                  {Math.min(stats.currentIndex + 1, stats.total)} / {stats.total}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-[10px] ${sub}`}>Hits</p>
+                <p className="text-base font-black text-green-400">{stats.hits}</p>
+              </div>
+            </div>
+          </div>
+
           <div
             className={`p-6 max-w-[400px] rounded-3xl backdrop-blur-md border shadow-xl pointer-events-none text-right ${
               theme === 'light'

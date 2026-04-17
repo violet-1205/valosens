@@ -35,6 +35,8 @@ function Test1() {
     }
   }, [])
 
+  const [movement, setMovement] = useState(0)
+
   const handleComplete = (data) => {
     localStorage.setItem('test1Data', JSON.stringify({ ...data, sensitivity: sensitivityMultiplier }))
     navigate('/test2')
@@ -49,9 +51,25 @@ function Test1() {
           theme === 'light' ? 'bg-[#F5F0EA]' : 'bg-[#0F1923]'
         } w-full flex-1 flex items-center justify-center`}
       >
-        <RotationSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} />
+        <RotationSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} onMovementChange={setMovement} />
 
         <div className="absolute right-8 top-1/2 -translate-y-1/2 z-[1002] flex flex-col gap-4 items-end">
+
+          {/* HUD — 현재 이동량 */}
+          <div
+            className={`p-4 rounded-2xl border backdrop-blur-md shadow-xl w-full pointer-events-none ${
+              theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
+            }`}
+          >
+            <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>현재 이동량</p>
+            <div className="flex items-baseline gap-1">
+              <p className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                {movement.toFixed(0)}
+              </p>
+              <p className={`text-xs ${sub}`}>px</p>
+            </div>
+          </div>
+
           <div
             className={`p-6 max-w-[440px] rounded-3xl backdrop-blur-md border shadow-xl pointer-events-none ${
               theme === 'light'
