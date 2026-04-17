@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { playConfirm, playComplete } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
+import Crosshair from './Crosshair'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -242,17 +243,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       )}
 
-      <div
-        className={`absolute inset-0 pointer-events-none z-20 flex items-center justify-center transition-opacity duration-300 ${
-          started && isPointerLocked ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <div className="relative w-6 h-6">
-          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-[#4ade80] -translate-y-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-          <div className="absolute left-1/2 top-0 w-[2px] h-full bg-[#4ade80] -translate-x-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-          <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white -translate-x-1/2 -translate-y-1/2" />
-        </div>
-      </div>
+      <Crosshair visible={started && isPointerLocked} />
 
       {started && clickCount === 0 && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded-xl backdrop-blur border border-white/20">

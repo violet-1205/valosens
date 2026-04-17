@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setSoundVolume, getSoundVolume } from '../utils/sounds'
+import { CROSSHAIR_OPTIONS } from './Crosshair'
 
 /* ── Volume icon (changes shape by level) ─────────────────────── */
 function VolumeIcon({ volume }) {
@@ -65,17 +66,30 @@ function Layout({ children, isTestPage = false }) {
     localStorage.setItem('soundVolume', volume.toString())
   }, [volume])
 
+  /* ── Crosshair ───────────────────────────────────────────────── */
+  const [crosshair, setCrosshair] = useState(
+    () => localStorage.getItem('crosshairType') || 'classic'
+  )
+  const [crosshairOpen, setCrosshairOpen] = useState(false)
+  const crosshairRef = useRef(null)
+
+  useEffect(() => {
+    localStorage.setItem('crosshairType', crosshair)
+    window.dispatchEvent(new CustomEvent('crosshair-change', { detail: crosshair }))
+  }, [crosshair])
+
   // Close popups on outside click
   const menuRef = useRef(null)
   useEffect(() => {
-    if (!volOpen && !menuOpen) return
+    if (!volOpen && !menuOpen && !crosshairOpen) return
     const handler = (e) => {
       if (volRef.current && !volRef.current.contains(e.target)) setVolOpen(false)
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+      if (crosshairRef.current && !crosshairRef.current.contains(e.target)) setCrosshairOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [volOpen, menuOpen])
+  }, [volOpen, menuOpen, crosshairOpen])
 
   /* ── Theme options ───────────────────────────────────────────── */
   const themeOptions = [
@@ -127,6 +141,74 @@ function Layout({ children, isTestPage = false }) {
 
           {/* Right controls */}
           <div className="flex items-center gap-0.5">
+
+            {/* ── Crosshair Selector ───────────────────────────── */}
+            <div className="relative" ref={crosshairRef}>
+              <button
+                type="button"
+                onClick={() => { setCrosshairOpen((v) => !v); setMenuOpen(false); setVolOpen(false) }}
+                title="조준선 설정"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  dark
+                    ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]'
+                    : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#DDD8D2]'
+                }`}
+              >
+                {/* Crosshair icon */}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9" />
+                  <line x1="12" y1="3" x2="12" y2="7" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                  <line x1="3" y1="12" x2="7" y2="12" />
+                  <line x1="17" y1="12" x2="21" y2="12" />
+                </svg>
+              </button>
+
+              {/* Crosshair dropdown */}
+              <div
+                className={`absolute left-0 top-11 z-20 w-44 rounded-2xl border shadow-xl overflow-hidden
+                  transition-all duration-200 ease-out origin-top-left
+                  ${dark ? 'bg-[#1B2E3D] border-[#2A3D4F]' : 'bg-white border-[#DDD8D2]'}
+                  ${crosshairOpen
+                    ? 'opacity-100 scale-100 translate-y-0'
+                    : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'
+                  }`}
+              >
+                {/* Header */}
+                <div className={`px-4 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
+                  조준선
+                </div>
+
+                {CROSSHAIR_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => { setCrosshair(opt.key); setCrosshairOpen(false) }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                      crosshair === opt.key
+                        ? 'text-[#FF4655] font-semibold'
+                        : dark
+                        ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]/50'
+                        : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#F5F0EA]'
+                    }`}
+                  >
+                    {/* Mini preview on dark bg */}
+                    <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-[#1A2A35] flex items-center justify-center">
+                      {opt.preview}
+                    </span>
+                    {opt.label}
+                    {crosshair === opt.key && (
+                      <span className="ml-auto">
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                          <path d="M1 6l3.5 3.5L11 2" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
+                <div className="h-1.5" />
+              </div>
+            </div>
 
             {/* ── Theme Toggle ─────────────────────────────────── */}
             <div className="relative" ref={menuRef}>

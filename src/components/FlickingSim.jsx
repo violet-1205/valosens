@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
+import Crosshair from './Crosshair'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -334,17 +335,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark' })
         </div>
       )}
 
-      <div
-        className={`absolute inset-0 pointer-events-none z-20 flex items-center justify-center transition-opacity duration-300 ${
-          started && countdown === 0 && isPointerLocked ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <div className="relative w-6 h-6">
-          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-[#4ade80] -translate-y-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-          <div className="absolute left-1/2 top-0 w-[2px] h-full bg-[#4ade80] -translate-x-1/2 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-          <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white -translate-x-1/2 -translate-y-1/2" />
-        </div>
-      </div>
+      <Crosshair visible={started && countdown === 0 && isPointerLocked} />
 
       <div className="absolute right-5 top-[110px] z-[1000] text-white font-mono text-xl space-y-2 bg-black/55 p-4 rounded-2xl backdrop-blur-md border border-white/15 text-right shadow-lg">
         <div className="flex justify-between gap-4">
