@@ -1,47 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Target({ position }) {
-  const floatRef = useRef()
-
-  useFrame((state) => {
-    if (!floatRef.current) return
-    const t = state.clock.elapsedTime
-    floatRef.current.position.y = Math.sin(t * 2.2) * 0.09
-    floatRef.current.scale.setScalar(1 + Math.sin(t * 3.2) * 0.03)
-  })
-
   return (
-    <group position={position}>
-      <group ref={floatRef}>
-        <mesh userData={{ isTarget: true }} castShadow>
-          <sphereGeometry args={[0.4, 128, 128]} />
-          <meshPhysicalMaterial
-            color="#ff6b7a"
-            emissive="#ff4655"
-            emissiveIntensity={0.18}
-            roughness={0.05}
-            metalness={0.0}
-            clearcoat={1.0}
-            clearcoatRoughness={0.02}
-            reflectivity={0.9}
-          />
-        </mesh>
-        {/* 카툰 하이라이트 — 큰 반짝이 */}
-        <mesh position={[0.13, 0.2, 0.33]}>
-          <sphereGeometry args={[0.09, 16, 16]} />
-          <meshBasicMaterial color="white" transparent opacity={0.88} />
-        </mesh>
-        {/* 카툰 하이라이트 — 작은 반짝이 */}
-        <mesh position={[0.06, 0.07, 0.37]}>
-          <sphereGeometry args={[0.045, 12, 12]} />
-          <meshBasicMaterial color="white" transparent opacity={0.65} />
-        </mesh>
-      </group>
-    </group>
+    <mesh position={position} userData={{ isTarget: true }} castShadow>
+      <sphereGeometry args={[0.4, 128, 128]} />
+      <meshStandardMaterial
+        color="#ff4655"
+        roughness={0.85}
+        metalness={0.0}
+      />
+    </mesh>
   )
 }
 

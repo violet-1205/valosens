@@ -37,21 +37,15 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
 // 정지 타겟 - 일정 시간 후 자동 소멸, 클릭 시 hit 판정
 function TappingTarget({ position, timeLimit, onHit, onMiss }) {
   const meshRef = useRef(null)
-  const floatRef = useRef()
   const spawnTime = useRef(performance.now())
   const resolved = useRef(false)
   const { camera, raycaster } = useThree()
 
-  useFrame((state) => {
+  useFrame(() => {
     if (resolved.current) return
     if (performance.now() - spawnTime.current >= timeLimit) {
       resolved.current = true
       onMiss()
-    }
-    if (floatRef.current) {
-      const t = state.clock.elapsedTime
-      floatRef.current.position.y = Math.sin(t * 2.4) * 0.07
-      floatRef.current.scale.setScalar(1 + Math.sin(t * 3.4) * 0.025)
     }
   })
 
@@ -71,33 +65,14 @@ function TappingTarget({ position, timeLimit, onHit, onMiss }) {
   }, [handleMouseDown])
 
   return (
-    <group position={position}>
-      <group ref={floatRef}>
-        <mesh ref={meshRef} castShadow>
-          <sphereGeometry args={[0.3, 128, 128]} />
-          <meshPhysicalMaterial
-            color="#ff6b7a"
-            emissive="#ff4655"
-            emissiveIntensity={0.18}
-            roughness={0.05}
-            metalness={0.0}
-            clearcoat={1.0}
-            clearcoatRoughness={0.02}
-            reflectivity={0.9}
-          />
-        </mesh>
-        {/* 카툰 하이라이트 — 큰 반짝이 */}
-        <mesh position={[0.1, 0.15, 0.25]}>
-          <sphereGeometry args={[0.07, 16, 16]} />
-          <meshBasicMaterial color="white" transparent opacity={0.88} />
-        </mesh>
-        {/* 카툰 하이라이트 — 작은 반짝이 */}
-        <mesh position={[0.05, 0.05, 0.27]}>
-          <sphereGeometry args={[0.035, 12, 12]} />
-          <meshBasicMaterial color="white" transparent opacity={0.65} />
-        </mesh>
-      </group>
-    </group>
+    <mesh ref={meshRef} position={position} castShadow>
+      <sphereGeometry args={[0.3, 128, 128]} />
+      <meshStandardMaterial
+        color="#ff4655"
+        roughness={0.85}
+        metalness={0.0}
+      />
+    </mesh>
   )
 }
 

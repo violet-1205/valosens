@@ -1,47 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { playConfirm, playComplete } from '../utils/sounds'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
-function CuteMarker({ pos, index = 0 }) {
-  const floatRef = useRef()
-
-  useFrame((state) => {
-    if (!floatRef.current) return
-    const t = state.clock.elapsedTime
-    floatRef.current.position.y = Math.sin(t * 2 + index * 1.3) * 0.08
-    floatRef.current.scale.setScalar(1 + Math.sin(t * 3 + index) * 0.03)
-  })
-
+function CuteMarker({ pos }) {
   return (
-    <group position={pos}>
-      <group ref={floatRef}>
-        <mesh userData={{ isMarker: true }} castShadow>
-          <sphereGeometry args={[0.3, 128, 128]} />
-          <meshPhysicalMaterial
-            color="#4ade80"
-            emissive="#22c55e"
-            emissiveIntensity={0.18}
-            roughness={0.05}
-            metalness={0.0}
-            clearcoat={1.0}
-            clearcoatRoughness={0.02}
-            reflectivity={0.9}
-          />
-        </mesh>
-        {/* 카툰 하이라이트 — 큰 반짝이 */}
-        <mesh position={[0.1, 0.15, 0.25]}>
-          <sphereGeometry args={[0.07, 16, 16]} />
-          <meshBasicMaterial color="white" transparent opacity={0.88} />
-        </mesh>
-        {/* 카툰 하이라이트 — 작은 반짝이 */}
-        <mesh position={[0.05, 0.05, 0.28]}>
-          <sphereGeometry args={[0.035, 12, 12]} />
-          <meshBasicMaterial color="white" transparent opacity={0.65} />
-        </mesh>
-      </group>
-    </group>
+    <mesh position={pos} userData={{ isMarker: true }} castShadow>
+      <sphereGeometry args={[0.3, 128, 128]} />
+      <meshStandardMaterial
+        color="#4ade80"
+        roughness={0.85}
+        metalness={0.0}
+      />
+    </mesh>
   )
 }
 
