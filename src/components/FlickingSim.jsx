@@ -7,13 +7,16 @@ import * as THREE from 'three'
 function Target({ position }) {
   return (
     <mesh position={position} castShadow>
-      <sphereGeometry args={[0.4, 64, 64]} />
-      <meshStandardMaterial
+      <sphereGeometry args={[0.4, 128, 128]} />
+      <meshPhysicalMaterial
         color="#ff4655"
         emissive="#ff4655"
-        emissiveIntensity={0.15}
-        roughness={0.25}
-        metalness={0.1}
+        emissiveIntensity={0.08}
+        roughness={0.08}
+        metalness={0.0}
+        clearcoat={1.0}
+        clearcoatRoughness={0.05}
+        reflectivity={0.8}
       />
     </mesh>
   )
@@ -168,9 +171,12 @@ function Scene({ onScore, onMiss, sensitivity, active, theme = 'dark' }) {
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
       <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[4, 8, 4]} intensity={1.5} castShadow />
-      <pointLight position={[-6, 4, -6]} intensity={0.4} color="#ffe0cc" />
+      <ambientLight intensity={0.4} />
+      <hemisphereLight args={['#dff0ff', '#b8c4d0', 0.6]} />
+      <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
+      <directionalLight position={[-4, 3, -4]} intensity={0.5} color="#a8d8ff" />
+      <pointLight position={[0, 5, 2]} intensity={0.8} color="#ffffff" />
+      <pointLight position={[0, -2, 3]} intensity={0.3} color="#ffaaaa" />
       <Target position={targetPos} />
     </>
   )
