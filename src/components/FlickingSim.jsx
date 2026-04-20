@@ -351,6 +351,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
         camera={{ position: [0, 0, 0], fov: 75 }}
       >
+        <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
         {started && (
           <>
             <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
