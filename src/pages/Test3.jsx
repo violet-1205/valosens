@@ -52,74 +52,63 @@ function Test3() {
       >
         <TrackingSim onComplete={handleComplete} sensitivity={sensitivityMultiplier} theme={theme} onStatsChange={setStats} />
 
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 z-[1001] flex flex-col gap-4 items-end">
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 z-[1001] w-72 flex flex-col gap-3 pointer-events-none">
 
-          {/* HUD — Target / Hits */}
-          <div
-            className={`p-4 rounded-2xl border backdrop-blur-md shadow-xl w-full pointer-events-none ${
-              theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
-            }`}
-          >
-            <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>현재 현황</p>
-            <div className="flex gap-6 justify-end">
-              <div className="text-right">
+          {/* HUD */}
+          <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
+            theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
+          }`}>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 현황</p>
+            <div className="flex justify-between">
+              <div>
                 <p className={`text-[10px] ${sub}`}>Target</p>
-                <p className="text-base font-black text-[#ff4655]">
+                <p className="text-xl font-black text-[#ff4655]">
                   {Math.min(stats.currentIndex + 1, stats.total)} / {stats.total}
                 </p>
               </div>
-              <div className="text-right">
+              <div>
                 <p className={`text-[10px] ${sub}`}>Hits</p>
-                <p className="text-base font-black text-green-400">{stats.hits}</p>
+                <p className="text-xl font-black text-green-400">{stats.hits}</p>
               </div>
             </div>
           </div>
 
-          <div
-            className={`p-6 max-w-[400px] rounded-3xl backdrop-blur-md border shadow-xl pointer-events-none text-right ${
-              theme === 'light'
-                ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
-                : 'bg-[#1B2E3D]/90 border-[#2A3D4F] text-[#ECE8E1]'
-            }`}
-          >
-            <h2 className="m-0 mb-3 text-[#ff4655] font-bold text-2xl">Test 3: 탭샷</h2>
-            <p className={`m-0 mb-2 ${theme === 'light' ? 'text-slate-700' : 'text-slate-200'}`}>
+          {/* 설명 */}
+          <div className={`px-4 py-4 rounded-3xl border backdrop-blur-md shadow-lg ${
+            theme === 'light' ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F] text-[#ECE8E1]'
+          }`}>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-[#ff4655] mb-1">Test 3</p>
+            <h2 className="text-lg font-black mb-2 leading-snug">탭샷</h2>
+            <p className={`text-sm mb-3 leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
               순간적으로 등장하는 정지 타겟을 빠르게 조준하여 클릭하세요.
             </p>
-            <p className={`m-0 text-sm ${sub}`}>
-              총 20개 타겟, 각 0.5초 제한.<br />
-              발로란트의 멈추고 쏘는 탭샷 에임 정밀도와 반응속도를 측정합니다.
-            </p>
+            <ul className={`text-xs space-y-1 leading-relaxed ${sub}`}>
+              <li>· 총 20개 타겟, 각 0.5초 제한.</li>
+              <li>· 발로란트의 멈추고 쏘는 탭샷 에임 정밀도와 반응속도를 측정합니다.</li>
+            </ul>
           </div>
 
-          {/* 감도 정보 (읽기 전용) */}
-          <div
-            className={`p-4 rounded-2xl border backdrop-blur-md shadow-xl w-full ${
-              theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
-            }`}
-          >
-            <p className={`text-[10px] uppercase tracking-wider font-bold mb-3 ${sub}`}>
-              현재 감도 설정
-            </p>
-            <div className="flex gap-6 justify-end">
-              <div className="text-right">
+          {/* 감도 */}
+          <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
+            theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
+          }`}>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 감도 설정</p>
+            <div className="flex justify-between">
+              <div>
                 <p className={`text-[10px] ${sub}`}>DPI</p>
-                <p className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  {userSetup.dpi}
-                </p>
+                <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.dpi}</p>
               </div>
-              <div className="text-right">
+              <div>
                 <p className={`text-[10px] ${sub}`}>감도</p>
-                <p className={`text-base font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  {userSetup.valorantSens}
-                </p>
+                <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.valorantSens}</p>
               </div>
-              <div className="text-right">
+              <div>
                 <p className={`text-[10px] ${sub}`}>eDPI</p>
-                <p className="text-base font-black text-[#ff4655]">{userSetup.eDPI}</p>
+                <p className="text-sm font-black text-[#ff4655]">{userSetup.eDPI}</p>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </Layout>
