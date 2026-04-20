@@ -7,8 +7,8 @@ import * as THREE from 'three'
 
 function Target({ position }) {
   return (
-    <mesh position={position} userData={{ isTarget: true }} castShadow>
-      <sphereGeometry args={[0.4, 128, 128]} />
+    <mesh position={position} userData={{ isTarget: true }}>
+      <sphereGeometry args={[0.4, 64, 64]} />
       <meshStandardMaterial
         color="#ff4655"
         roughness={0.85}
@@ -167,12 +167,9 @@ function Scene({ onScore, onMiss, sensitivity, active, theme = 'dark' }) {
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
       <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
-      <ambientLight intensity={0.4} />
-      <hemisphereLight args={['#dff0ff', '#b8c4d0', 0.6]} />
-      <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
-      <directionalLight position={[-4, 3, -4]} intensity={0.5} color="#a8d8ff" />
-      <pointLight position={[0, 5, 2]} intensity={0.8} color="#ffffff" />
-      <pointLight position={[0, -2, 3]} intensity={0.3} color="#ffaaaa" />
+      <ambientLight intensity={0.7} />
+      <hemisphereLight args={['#e8f4ff', '#c8ccd0', 1.0]} />
+      <directionalLight position={[5, 10, 5]} intensity={1.6} />
       <Target position={targetPos} />
     </>
   )
@@ -349,7 +346,11 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
         </div>
       )}
 
-      <Canvas shadows camera={{ position: [0, 0, 0], fov: 75 }}>
+      <Canvas
+        dpr={[1, 2]}
+        gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
+        camera={{ position: [0, 0, 0], fov: 75 }}
+      >
         {started && (
           <>
             <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />

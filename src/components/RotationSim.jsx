@@ -7,8 +7,8 @@ import * as THREE from 'three'
 
 function CuteMarker({ pos }) {
   return (
-    <mesh position={pos} userData={{ isMarker: true }} castShadow>
-      <sphereGeometry args={[0.3, 128, 128]} />
+    <mesh position={pos} userData={{ isMarker: true }}>
+      <sphereGeometry args={[0.3, 64, 64]} />
       <meshStandardMaterial
         color="#4ade80"
         roughness={0.85}
@@ -76,12 +76,9 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme 
     <>
       <PlayerController sensitivityMultiplier={sensitivity} />
       <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
-      <ambientLight intensity={0.4} />
-      <hemisphereLight args={['#dff0ff', '#b8d4c8', 0.6]} />
-      <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
-      <directionalLight position={[-4, 3, -4]} intensity={0.5} color="#a8d8ff" />
-      <pointLight position={[0, 5, 2]} intensity={0.8} color="#ffffff" />
-      <pointLight position={[0, -2, 3]} intensity={0.3} color="#88ffaa" />
+      <ambientLight intensity={0.7} />
+      <hemisphereLight args={['#e8f4ff', '#c8dcc8', 1.0]} />
+      <directionalLight position={[5, 10, 5]} intensity={1.6} />
       {markers.map((pos, index) => (
         <CuteMarker key={index} pos={pos} index={index} />
       ))}
@@ -260,7 +257,11 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
           </div>
       )}
 
-      <Canvas shadows camera={{ position: [0, 0, 0], fov: 75 }}>
+      <Canvas
+        dpr={[1, 2]}
+        gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
+        camera={{ position: [0, 0, 0], fov: 75 }}
+      >
         {started && (
           <>
             <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
