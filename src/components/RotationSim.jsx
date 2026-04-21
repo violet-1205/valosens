@@ -8,6 +8,7 @@ import * as THREE from 'three'
 
 const CAMERA_CONFIG = { position: [0, 0, 0], fov: 75, near: 0.01, far: 1000 }
 const PITCH_LIMIT = Math.PI / 2.2
+const DEV_CAMERA_DEFAULT = { x: -2.07, y: 2.32, z: 2.15, fov: 70 }
 
 function CuteMarker({ pos }) {
   return (
@@ -103,6 +104,7 @@ export default function RotationSim({
   const [clickCount, setClickCount] = useState(0)
   const [markers, setMarkers] = useState([])
   const [hasFirstClick, setHasFirstClick] = useState(false)
+  const [cameraDebug, setCameraDebug] = useState(DEV_CAMERA_DEFAULT)
   const containerRef = useRef(null)
   const cameraRef = useRef(null)
   const startYawRef = useRef(0)
@@ -113,6 +115,14 @@ export default function RotationSim({
   useEffect(() => {
     onMovementChange?.(movement)
   }, [movement, onMovementChange])
+
+  useEffect(() => {
+    const camera = cameraRef.current
+    if (!camera || !devInstantPreview) return
+    camera.position.set(cameraDebug.x, cameraDebug.y, cameraDebug.z)
+    camera.fov = cameraDebug.fov
+    camera.updateProjectionMatrix()
+  }, [cameraDebug, devInstantPreview])
 
   useEffect(() => {
     const handleLockChange = () => {
@@ -268,6 +278,34 @@ export default function RotationSim({
           </div>
       )}
 
+      {devInstantPreview && (
+        <div className="absolute right-4 top-4 z-[45] w-72 rounded-2xl border border-white/20 bg-black/60 p-3 text-white/90 backdrop-blur">
+          <p className="mb-2 text-sm font-bold text-[#ff4655]">Camera Debug</p>
+          {[
+            { key: 'x', min: -5, max: 5, step: 0.01 },
+            { key: 'y', min: -5, max: 5, step: 0.01 },
+            { key: 'z', min: -5, max: 5, step: 0.01 },
+            { key: 'fov', min: 30, max: 120, step: 1 },
+          ].map((cfg) => (
+            <label key={cfg.key} className="mb-2 block text-xs">
+              {cfg.key.toUpperCase()} : {cameraDebug[cfg.key].toFixed(cfg.key === 'fov' ? 0 : 2)}
+              <input
+                type="range"
+                min={cfg.min}
+                max={cfg.max}
+                step={cfg.step}
+                value={cameraDebug[cfg.key]}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  setCameraDebug((prev) => ({ ...prev, [cfg.key]: n }))
+                }}
+                className="mt-1 w-full"
+              />
+            </label>
+          ))}
+        </div>
+      )}
+
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
@@ -285,6 +323,11 @@ export default function RotationSim({
               markers={markers}
               onCameraReady={(camera) => {
                 cameraRef.current = camera
+                if (devInstantPreview) {
+                  camera.position.set(cameraDebug.x, cameraDebug.y, cameraDebug.z)
+                  camera.fov = cameraDebug.fov
+                  camera.updateProjectionMatrix()
+                }
               }}
               onSphereClick={handleSphereClick}
               theme={theme}
