@@ -8,22 +8,15 @@ const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQ = new THREE.Quaternion()
 
 const MODEL_PATH = '/mark_23__animated_free.glb'
-const flashMat   = new THREE.MeshBasicMaterial({ color: '#ffdd33', transparent: true, opacity: 0.92 })
 
-// scale=0.012 기준 센터 보정값
-// center y=138.827 → -138.827*0.012 = -1.666
-// center z=-10.562 → +10.562*0.012 = 0.127
-const SCALE    = 0.012
-const OFFSET_Y = -(138.827 * SCALE)   // -1.666
-const OFFSET_Z =  (10.562  * SCALE)   //  0.127
+const SCALE    = 0.0096
+const OFFSET_Y = -(138.827 * SCALE)
+const OFFSET_Z =  (10.562  * SCALE)
 
 export default function GunViewModel({ active = true }) {
-  const groupRef      = useRef()
-  const muzzleRef     = useRef()
-  const flashLightRef = useRef()
-  const spring        = useRef({ pos: 0, vel: 0 })
-  const flashTimer    = useRef(0)
-  const { camera }    = useThree()
+  const groupRef  = useRef()
+  const spring    = useRef({ pos: 0, vel: 0 })
+  const { camera } = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
   const { actions }           = useAnimations(animations, groupRef)
@@ -44,7 +37,6 @@ export default function GunViewModel({ active = true }) {
       if (!active || !actions.Shoot) return
 
       spring.current.vel = 0.07
-      flashTimer.current = 0.12
 
       // 진행 중이던 Shoot 애니메이션 즉시 리셋 후 재생
       actions.Shoot
@@ -65,14 +57,6 @@ export default function GunViewModel({ active = true }) {
     spring.current.pos = pos + spring.current.vel * dt
     const recoil = spring.current.pos
 
-    flashTimer.current = Math.max(0, flashTimer.current - dt)
-    const ft = flashTimer.current / 0.12
-    if (muzzleRef.current) {
-      muzzleRef.current.visible = ft > 0.05
-      muzzleRef.current.scale.setScalar(ft * 0.9 + 0.1)
-    }
-    if (flashLightRef.current) flashLightRef.current.intensity = ft * 3.0
-
     _offset.set(0.12, -0.20, -0.42)
     _offset.applyQuaternion(camera.quaternion)
     _offset.add(camera.position)
@@ -92,17 +76,6 @@ export default function GunViewModel({ active = true }) {
         scale={SCALE}
         rotation={[0, Math.PI, 0]}
         position={[0, OFFSET_Y, OFFSET_Z]}
-      />
-      <mesh ref={muzzleRef} position={[0, 0.12, -0.12]} visible={false} material={flashMat}>
-        <sphereGeometry args={[0.03, 8, 8]} />
-      </mesh>
-      <pointLight
-        ref={flashLightRef}
-        position={[0, 0.12, -0.12]}
-        color="#ff9900"
-        intensity={0}
-        distance={1.5}
-        decay={2}
       />
     </group>
   )
