@@ -7,7 +7,7 @@ const _offset = new THREE.Vector3()
 const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQ = new THREE.Quaternion()
 
-const MODEL_PATH = '/animated_pistol.glb'
+const MODEL_PATH = '/pistol_animated.glb'
 
 export default function GunViewModel({ active = true }) {
   const groupRef   = useRef()
@@ -18,15 +18,10 @@ export default function GunViewModel({ active = true }) {
   const { scene, animations } = useGLTF(MODEL_PATH)
   const { actions, names }    = useAnimations(animations, sceneRef)
 
-  // 애니메이션 이름 확인
-  useEffect(() => {
-    if (names.length) console.log('[Gun] 애니메이션:', names)
-  }, [names])
-
-  // 발사 애니메이션 — 클릭 시 재생
+  // Fire 애니메이션만 사용 — Idle/Reload/Hide 재생 안 함
   useEffect(() => {
     if (!names.length) return
-    const fireName = names[0] // animated_pistol.glb 은 'allanimations' 단일 클립
+    const fireName = names.find(n => /fire/i.test(n)) ?? names[0]
 
     const onDown = () => {
       if (!active || !actions[fireName]) return
