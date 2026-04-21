@@ -14,43 +14,75 @@ const OFFSET_Y = -(138.827 * SCALE)
 const OFFSET_Z =  (10.562  * SCALE)
 
 export default function GunViewModel({ active = true }) {
-  const groupRef  = useRef()
-  const spring    = useRef({ pos: 0, vel: 0 })
-  const { camera } = useThree()
+  const groupRef       = useRef()
+  const spring         = useRef({ pos: 0, vel: 0 })
+  const shootTimeout   = useRef(null)
+  const initDone       = useRef(false)
+  const { camera }     = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
-  const { actions }           = useAnimations(animations, groupRef)
+  const { actions, mixer }    = useAnimations(animations, groupRef)
 
-  // Draw 스킵 — 마지막 프레임으로 즉시 점프 (총이 바로 들려있는 상태)
+  // 초기화: Draw 마지막 프레임에서 정지 (총 들고 있는 자세)
+  // useFrame 첫 번째 tick에서 처리해야 mixer가 pose 반영
   useEffect(() => {
-    if (!actions.Draw) return
-    const a = actions.Draw
-    a.reset().setLoop(THREE.LoopOnce, 1).play()
-    a.clampWhenFinished = true
-    // 마지막 프레임으로 즉시 이동
-    a.time = a._clip.duration
+    initDone.current = false
   }, [actions])
 
-  // 발사 — 즉시 반응, 연사 가능
+  // 발사
   useEffect(() => {
     const onDown = () => {
       if (!active || !actions.Shoot) return
 
       spring.current.vel = 0.07
 
-      // 진행 중이던 Shoot 애니메이션 즉시 리셋 후 재생
-      actions.Shoot
-        .reset()
-        .setLoop(THREE.LoopOnce, 1)
-        .play()
-      actions.Shoot.clampWhenFinished = true
+      // 진행 중 복귀 타이머 취소
+      if (shootTimeout.current) {
+        clearTimeout(shootTimeout.current)
+        shootTimeout.current = null
+      }
+
+      // Shoot 즉시 재생
+      actions.Shoot.reset().setLoop(THREE.LoopOnce, 1).play()
+      actions.Shoot.clampWhenFinished = false
+
+      // Shoot 끝나면 Draw 마지막 프레임(들고있는 자세)으로 복귀
+      const duration = (actions.Shoot._clip?.duration ?? 0.35) * 1000
+      shootTimeout.current = setTimeout(() => {
+        if (!actions.Draw) return
+        actions.Shoot.stop()
+        const draw = actions.Draw
+        draw.reset().setLoop(THREE.LoopOnce, 1).play()
+        draw.clampWhenFinished = true
+        // 다음 프레임에 마지막 시간으로 점프
+        requestAnimationFrame(() => {
+          draw.time = draw._clip.duration
+          draw.paused = true
+        })
+        shootTimeout.current = null
+      }, Math.max(duration * 0.85, 80))
     }
+
     window.addEventListener('mousedown', onDown)
-    return () => window.removeEventListener('mousedown', onDown)
+    return () => {
+      window.removeEventListener('mousedown', onDown)
+      if (shootTimeout.current) clearTimeout(shootTimeout.current)
+    }
   }, [active, actions])
 
   useFrame((_, dt) => {
     if (!groupRef.current) return
+
+    // 첫 tick에 Draw 마지막 프레임으로 고정
+    if (!initDone.current && actions.Draw) {
+      const draw = actions.Draw
+      draw.reset().setLoop(THREE.LoopOnce, 1).play()
+      draw.clampWhenFinished = true
+      draw.time = draw._clip.duration
+      draw.paused = true
+      mixer.update(0)  // 즉시 pose 반영
+      initDone.current = true
+    }
 
     const { pos, vel } = spring.current
     spring.current.vel = vel + (-pos * 24 - vel * 10) * dt
