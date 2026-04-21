@@ -1,6 +1,6 @@
 /* @refresh reset */
 import { useEffect, useMemo, useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -20,7 +20,6 @@ const _center = new THREE.Vector3()
 
 export default function GunViewModel({ active = true }) {
   const groupRef = useRef(null)
-  const { camera } = useThree()
 
   const { scene } = useGLTF(MODEL_PATH)
   const modelScene = useMemo(() => {
@@ -39,7 +38,9 @@ export default function GunViewModel({ active = true }) {
     })
   }, [modelScene])
 
-  useFrame(() => {
+  // Receive camera from RenderState so we always track the current active camera,
+  // even when PerspectiveCamera makeDefault swaps in after mount.
+  useFrame(({ camera }) => {
     if (!groupRef.current) return
 
     _offset

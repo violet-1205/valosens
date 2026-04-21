@@ -305,6 +305,9 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
         camera={CAMERA_CONFIG}
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
+        <Suspense fallback={null}>
+          <GunViewModel active={started && isPointerLocked && countdown === 0} />
+        </Suspense>
         {started && countdown === 0 && (
           <>
             <PerspectiveCamera makeDefault {...CAMERA_CONFIG} />
@@ -317,9 +320,6 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
               active={currentIndex < TOTAL_TARGETS}
               theme={theme}
             />
-            <Suspense fallback={null}>
-              <GunViewModel active={isPointerLocked} />
-            </Suspense>
           </>
         )}
       </Canvas>

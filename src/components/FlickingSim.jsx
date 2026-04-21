@@ -356,6 +356,9 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
         camera={CAMERA_CONFIG}
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
+        <Suspense fallback={null}>
+          <GunViewModel active={started && isPointerLocked && countdown === 0} />
+        </Suspense>
         {started && (
           <>
             <PerspectiveCamera makeDefault {...CAMERA_CONFIG} />
@@ -374,9 +377,6 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
               active={countdown === 0}
               theme={theme}
             />
-            <Suspense fallback={null}>
-              <GunViewModel active={isPointerLocked && countdown === 0} />
-            </Suspense>
           </>
         )}
       </Canvas>
