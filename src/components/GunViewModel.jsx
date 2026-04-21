@@ -8,20 +8,18 @@ const _offset = new THREE.Vector3()
 const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQ = new THREE.Quaternion()
 
-const MODEL_PATH = '/pistol_animated.glb'
+const MODEL_PATH = '/fps_animations_vsk.glb'
 
-// ── 실측치 (gltf-transform inspect) ──────────────────────────
-// bbox Y: -0.285 ~ +0.537  (총 0.822 유닛)
-// 메쉬: arm_arms_0 + pistol_pistol_0  (팔+권총만, 풀바디 아님)
-// FOV 75° / Z=-0.50 → 화면 절반높이 ≈ 0.384 월드유닛
-// scale 0.32 → 모델 높이 0.263 유닛 ≈ 화면 높이의 34%
+// ── 실측치 ────────────────────────────────────────────────────
+// bbox XYZ: ±1.0 / ±1.0 / -1.193~+1.279  (총 ~2 유닛)
+// 메쉬: Male_04 (팔) + VSK-94 3파트
+// 애니메이션: Rig|VSK_Idle / Rig|VSK_Fire 등
 // ─────────────────────────────────────────────────────────────
-const VIEW_OFFSET = new THREE.Vector3(0.20, -0.22, -0.50)
+const VIEW_OFFSET = new THREE.Vector3(0.18, -0.20, -0.50)
 const LOCAL_TILT  = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
-const MESH_SCALE  = 0.32
-const MESH_ROT    = [0.11, Math.PI + 0.4, -0.035]
-// Y 오프셋: 팔 아랫부분 살짝 화면 밖으로 → 자연스러운 FPS 컷오프
-const MESH_POS    = [0.0, -0.10, 0.0]
+const MESH_SCALE  = 0.13
+const MESH_ROT    = [0.08, Math.PI + 0.35, -0.03]
+const MESH_POS    = [0.0, -0.08, 0.0]
 
 export default function GunViewModel({ active = true }) {
   const groupRef   = useRef()
@@ -39,20 +37,47 @@ export default function GunViewModel({ active = true }) {
     })
   }, [modelScene])
 
-  // Fire 애니메이션만 — Armature|Fire
+  // Idle 루프 재생
+  useEffect(() => {
+    if (!names.length) return
+    const idleName = names.find(n => /idle/i.test(n))
+    if (idleName && actions[idleName]) {
+      actions[idleName].setLoop(THREE.LoopRepeat, Infinity)
+      actions[idleName].play()
+    }
+  }, [actions, names])
+
+  // Fire: 클릭 시 Idle → Fire → Idle
   useEffect(() => {
     if (!names.length) return
     const fireName = names.find(n => /fire/i.test(n)) ?? names[0]
+    const idleName = names.find(n => /idle/i.test(n))
 
     const onDown = () => {
       if (!active || !actions[fireName]) return
       spring.current.vel = 0.12
+
+      if (idleName && actions[idleName]) actions[idleName].stop()
+
       const action = actions[fireName]
       action.stop()
       action.reset()
       action.setLoop(THREE.LoopOnce, 1)
-      action.clampWhenFinished = true
+      action.clampWhenFinished = false
       action.play()
+
+      // Fire 끝나면 Idle 복귀
+      const mixer = action.getMixer()
+      const onFinished = (e) => {
+        if (e.action !== action) return
+        mixer.removeEventListener('finished', onFinished)
+        if (idleName && actions[idleName]) {
+          actions[idleName].reset()
+          actions[idleName].setLoop(THREE.LoopRepeat, Infinity)
+          actions[idleName].play()
+        }
+      }
+      mixer.addEventListener('finished', onFinished)
     }
     window.addEventListener('mousedown', onDown)
     return () => window.removeEventListener('mousedown', onDown)
