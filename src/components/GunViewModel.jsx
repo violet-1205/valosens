@@ -13,12 +13,12 @@ const _localQ = new THREE.Quaternion()
 const MODEL_PATH = '/pistol_animated.glb'
 
 // 1인칭 뷰모델: 우하단 · 슬라이드 뒤가 카메라 · 총구는 좌상(레퍼런스 이미지 기준)
-const VIEW_OFFSET  = new THREE.Vector3(0.22, -0.14, -0.40)
+const VIEW_OFFSET  = new THREE.Vector3(0.20, -0.20, -0.55)
 const LOCAL_TILT   = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
 // 모델 로컬 보정 — Y=-1.46 으로 발/몸통 화면 밖, 총+손목만 노출
 const MESH_ROT     = [0.11, Math.PI + 0.4, -0.035]
 const MESH_POS     = [0.03, -1.46, 0.05]
-const MESH_SCALE   = 0.56
+const MESH_SCALE   = 0.20
 
 export default function GunViewModel({ active = true }) {
   const groupRef   = useRef()
