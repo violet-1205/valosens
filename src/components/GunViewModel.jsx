@@ -46,12 +46,12 @@ export default function GunViewModel({ active = true }) {
     const recoil = spring.current.pos
 
     // 우하단 고정 — x:오른쪽, y:아래, z:카메라 거리
-    _offset.set(0.30, -0.22, -0.42)
+    _offset.set(0.26, -0.36, -0.38)
     _offset.applyQuaternion(camera.quaternion)
     _offset.add(camera.position)
     groupRef.current.position.copy(_offset)
 
-    _euler.set(-0.05 - recoil * 2.5, 0.10, -0.03)
+    _euler.set(-0.08 - recoil * 2.5, 0.08, -0.02)
     _localQ.setFromEuler(_euler)
     groupRef.current.quaternion.multiplyQuaternions(camera.quaternion, _localQ)
 
@@ -63,7 +63,7 @@ export default function GunViewModel({ active = true }) {
       <primitive
         ref={sceneRef}
         object={scene}
-        scale={0.45}
+        scale={0.22}
         rotation={[0, Math.PI, 0]}
         position={[0, 0, 0]}
       />
