@@ -13,75 +13,41 @@ const SCALE    = 0.0096
 const OFFSET_Y = -(138.827 * SCALE)
 const OFFSET_Z =  (10.562  * SCALE)
 
-function goToDrawPose(actions) {
-  const draw = actions.Draw
-  if (!draw) return
-  draw.stop()
-  draw.reset()
-  draw.setLoop(THREE.LoopOnce, 1)
-  draw.clampWhenFinished = true
-  draw.play()
-  draw.time = draw._clip.duration
-  draw.paused = true
-}
-
 export default function GunViewModel({ active = true }) {
-  const groupRef     = useRef()
-  const spring       = useRef({ pos: 0, vel: 0 })
-  const shootTimeout = useRef(null)
-  const initDone     = useRef(false)
-  const { camera }   = useThree()
+  const groupRef   = useRef()
+  const sceneRef   = useRef()        // scene 직접 참조 → mixer root로 사용
+  const spring     = useRef({ pos: 0, vel: 0 })
+  const { camera } = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
-  const { actions, mixer }    = useAnimations(animations, groupRef)
 
-  useEffect(() => { initDone.current = false }, [actions])
+  // mixer root = scene (bone이 실제로 있는 곳)
+  const { actions } = useAnimations(animations, sceneRef)
 
+  // 마운트 시 Shoot 애니메이션 frame 0에서 대기
+  useEffect(() => {
+    if (!actions?.Shoot) return
+    actions.Shoot.reset()
+    actions.Shoot.setLoop(THREE.LoopOnce, 1)
+    actions.Shoot.clampWhenFinished = true
+    actions.Shoot.play()
+    actions.Shoot.paused = true   // frame 0에서 정지 (총 들고 있는 자세)
+  }, [actions])
+
+  // 클릭 → Shoot 재생
   useEffect(() => {
     const onDown = () => {
-      if (!active || !actions.Shoot) return
-
+      if (!active || !actions?.Shoot) return
       spring.current.vel = 0.07
-
-      if (shootTimeout.current) {
-        clearTimeout(shootTimeout.current)
-        shootTimeout.current = null
-      }
-
-      // Draw 완전 정지 → Shoot 단독 재생 (블렌딩 없음)
-      if (actions.Draw) actions.Draw.stop()
-
-      actions.Shoot.stop()
-      actions.Shoot.reset()
-      actions.Shoot.setLoop(THREE.LoopOnce, 1)
-      actions.Shoot.clampWhenFinished = false
-      actions.Shoot.play()
-
-      // Shoot 끝나면 Draw 포즈로 복귀
-      const duration = (actions.Shoot._clip?.duration ?? 0.35) * 1000
-      shootTimeout.current = setTimeout(() => {
-        actions.Shoot.stop()
-        goToDrawPose(actions)
-        shootTimeout.current = null
-      }, Math.max(duration, 80))
+      actions.Shoot.paused = false   // 그냥 재생 재개 (reset 없이)
+      actions.Shoot.reset().play()   // 연속 클릭 시 처음부터 재생
     }
-
     window.addEventListener('mousedown', onDown)
-    return () => {
-      window.removeEventListener('mousedown', onDown)
-      if (shootTimeout.current) clearTimeout(shootTimeout.current)
-    }
+    return () => window.removeEventListener('mousedown', onDown)
   }, [active, actions])
 
   useFrame((_, dt) => {
     if (!groupRef.current) return
-
-    // 첫 tick: Draw 마지막 프레임으로 초기화
-    if (!initDone.current && actions.Draw && mixer) {
-      goToDrawPose(actions)
-      mixer.update(0)
-      initDone.current = true
-    }
 
     const { pos, vel } = spring.current
     spring.current.vel = vel + (-pos * 24 - vel * 10) * dt
@@ -103,6 +69,7 @@ export default function GunViewModel({ active = true }) {
   return (
     <group ref={groupRef}>
       <primitive
+        ref={sceneRef}
         object={scene}
         scale={SCALE}
         rotation={[0, Math.PI, 0]}
