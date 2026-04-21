@@ -186,8 +186,9 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
   const [started, setStarted] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
+  const [shootTrigger, setShootTrigger] = useState(0)
   const containerRef = useRef(null)
-  
+
   const statsRef = useRef([])
 
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
@@ -357,7 +358,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
         <Suspense fallback={null}>
-          <GunViewModel active={started && isPointerLocked && countdown === 0} />
+          <GunViewModel active={started && isPointerLocked && countdown === 0} shootTrigger={shootTrigger} />
         </Suspense>
         {started && (
           <>
@@ -366,11 +367,13 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
               onScore={(data) => {
                 playHit()
                 setScore((s) => s + 1)
+                setShootTrigger((t) => t + 1)
                 statsRef.current.push(data)
               }}
               onMiss={(data) => {
                 playMiss()
                 setMisses((m) => m + 1)
+                setShootTrigger((t) => t + 1)
                 statsRef.current.push(data)
               }}
               sensitivity={sensitivity}

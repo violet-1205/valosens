@@ -109,6 +109,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
   const [started, setStarted] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
+  const [shootTrigger, setShootTrigger] = useState(0)
   const containerRef = useRef(null)
 
   const currentIndexRef = useRef(0)
@@ -133,6 +134,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
   const handleHit = useCallback(
     (reactionTime) => {
       playHit()
+      setShootTrigger((t) => t + 1)
       hitsRef.current += 1
       setHitsCount(hitsRef.current)
       reactionTimesRef.current.push(reactionTime)
@@ -306,7 +308,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
         <Suspense fallback={null}>
-          <GunViewModel active={started && isPointerLocked && countdown === 0} />
+          <GunViewModel active={started && isPointerLocked && countdown === 0} shootTrigger={shootTrigger} />
         </Suspense>
         {started && countdown === 0 && (
           <>

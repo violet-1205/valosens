@@ -105,6 +105,7 @@ export default function RotationSim({
   const [markers, setMarkers] = useState([])
   const [hasFirstClick, setHasFirstClick] = useState(false)
   const [cameraDebug, setCameraDebug] = useState(DEV_CAMERA_DEFAULT)
+  const [shootTrigger, setShootTrigger] = useState(0)
   const containerRef = useRef(null)
   const cameraRef = useRef(null)
   const startYawRef = useRef(0)
@@ -165,11 +166,13 @@ export default function RotationSim({
       requestLock()
       return
     }
-    
+
+    setShootTrigger((t) => t + 1)
+
     // Logic:
     // Click 1: Spawn green sphere at center of view. Start recording.
     // Click 2 (on sphere): Handled by Scene component. Stop recording. Complete test.
-    
+
     if (clickCount === 0) {
         const camera = cameraRef.current
         if (camera) {
@@ -313,7 +316,7 @@ export default function RotationSim({
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
         <Suspense fallback={null}>
-          <GunViewModel active={modelActive} />
+          <GunViewModel active={modelActive} shootTrigger={shootTrigger} />
         </Suspense>
         {started && (
           <>

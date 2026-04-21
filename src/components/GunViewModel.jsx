@@ -1,45 +1,78 @@
 /* @refresh reset */
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
+import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 
 const MODEL_PATH = '/Fps%20Rig.glb'
-const VIEW_OFFSET = new THREE.Vector3(0.75, -0.85, -1.2)
+const VIEW_OFFSET = new THREE.Vector3(0.55, -0.42, -0.9)
 const MESH_SCALE = 0.03
-const MESH_ROT = [0, Math.PI, 0]
-const MESH_POS = [0, 0, 0]
-
+const MESH_ROT = new THREE.Euler(0, Math.PI, 0)
 const LOCAL_TILT = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
 
 const _offset = new THREE.Vector3()
 const _localEuler = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQuat = new THREE.Quaternion()
-const _box = new THREE.Box3()
-const _center = new THREE.Vector3()
 
-export default function GunViewModel({ active = true }) {
+export default function GunViewModel({ active = true, shootTrigger = 0 }) {
   const groupRef = useRef(null)
+  const isShooting = useRef(false)
 
-  const { scene } = useGLTF(MODEL_PATH)
-  const modelScene = useMemo(() => {
-    const cloned = scene.clone(true)
-    // Re-center model so placement constants map directly to screen position.
-    _box.setFromObject(cloned)
-    if (!_box.isEmpty()) {
-      _box.getCenter(_center)
-      cloned.position.sub(_center)
-    }
-    return cloned
-  }, [scene])
+  const { scene, animations } = useGLTF(MODEL_PATH)
+  const { actions, mixer } = useAnimations(animations, groupRef)
+
+  // Apply scale/rotation directly to scene on first load
   useEffect(() => {
-    modelScene.traverse((obj) => {
+    if (!scene) return
+    scene.scale.setScalar(MESH_SCALE)
+    scene.rotation.copy(MESH_ROT)
+    scene.traverse((obj) => {
       if (obj.isMesh) obj.frustumCulled = false
     })
-  }, [modelScene])
+  }, [scene])
 
-  // Receive camera from RenderState so we always track the current active camera,
-  // even when PerspectiveCamera makeDefault swaps in after mount.
+  // Play Idle animation on mount
+  useEffect(() => {
+    if (!actions) return
+    const idle = actions['Armature|Idle']
+    if (idle) {
+      idle.reset()
+      idle.setLoop(THREE.LoopRepeat, Infinity)
+      idle.fadeIn(0.2)
+      idle.play()
+    }
+  }, [actions])
+
+  // Shoot animation on trigger
+  useEffect(() => {
+    if (shootTrigger === 0) return
+    if (!actions) return
+    const shoot = actions['Armature|Shoot']
+    const idle = actions['Armature|Idle']
+    if (!shoot || isShooting.current) return
+
+    isShooting.current = true
+    shoot.reset()
+    shoot.setLoop(THREE.LoopOnce, 1)
+    shoot.clampWhenFinished = true
+    shoot.fadeIn(0.05)
+    shoot.play()
+
+    const onFinish = (e) => {
+      if (e.action !== shoot) return
+      isShooting.current = false
+      shoot.fadeOut(0.1)
+      if (idle) {
+        idle.reset()
+        idle.setLoop(THREE.LoopRepeat, Infinity)
+        idle.fadeIn(0.1)
+        idle.play()
+      }
+      mixer.removeEventListener('finished', onFinish)
+    }
+    mixer.addEventListener('finished', onFinish)
+  }, [shootTrigger, actions, mixer])
+
   useFrame(({ camera }) => {
     if (!groupRef.current) return
 
@@ -57,12 +90,7 @@ export default function GunViewModel({ active = true }) {
 
   return (
     <group ref={groupRef}>
-      <primitive
-        object={modelScene}
-        scale={MESH_SCALE}
-        rotation={MESH_ROT}
-        position={MESH_POS}
-      />
+      <primitive object={scene} />
     </group>
   )
 }
