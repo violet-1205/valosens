@@ -8,8 +8,7 @@ const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQ = new THREE.Quaternion()
 
 const MODEL_PATH = '/mark_23__animated_free.glb'
-
-const flashMat = new THREE.MeshBasicMaterial({ color: '#ffdd33', transparent: true, opacity: 0.92 })
+const flashMat   = new THREE.MeshBasicMaterial({ color: '#ffdd33', transparent: true, opacity: 0.92 })
 
 export default function GunViewModel({ active = true }) {
   const groupRef      = useRef()
@@ -17,49 +16,45 @@ export default function GunViewModel({ active = true }) {
   const flashLightRef = useRef()
   const spring        = useRef({ pos: 0, vel: 0 })
   const flashTimer    = useRef(0)
+  const canFireRef    = useRef(true)
   const { camera }    = useThree()
 
-  // scene 직접 사용 — 클론 없이 useAnimations과 노드 일치
   const { scene, animations } = useGLTF(MODEL_PATH)
-  const { actions, names }    = useAnimations(animations, groupRef)
+  const { actions }           = useAnimations(animations, groupRef)
 
-  // 사용 가능한 애니메이션 이름 출력
+  // Draw 애니메이션으로 시작 (총 꺼내는 모션)
   useEffect(() => {
-    if (names.length) console.log('[GunViewModel] 애니메이션:', names)
-  }, [names])
+    if (!actions.Draw) return
+    actions.Draw.reset()
+      .setLoop(THREE.LoopOnce, 1)
+      .fadeIn(0.1)
+      .play()
+    actions.Draw.clampWhenFinished = true
+  }, [actions])
 
-  // Idle 재생
-  useEffect(() => {
-    if (!names.length) return
-    const idleName = names.find(n => /idle/i.test(n)) ?? names[0]
-    actions[idleName]?.reset().fadeIn(0.3).play()
-    return () => { actions[idleName]?.stop() }
-  }, [actions, names])
-
-  // 발사
+  // 발사: Shoot → 끝나면 멈춤 (마지막 프레임 유지)
   useEffect(() => {
     const onDown = () => {
-      if (!active) return
+      if (!active || !canFireRef.current || !actions.Shoot) return
+      canFireRef.current = false
+
       spring.current.vel = 0.07
       flashTimer.current = 0.12
 
-      const fireName = names.find(n => /fire|shoot|recoil|attack/i.test(n))
-      const idleName = names.find(n => /idle/i.test(n)) ?? names[0]
+      actions.Shoot.reset()
+        .setLoop(THREE.LoopOnce, 1)
+        .fadeIn(0.04)
+        .play()
+      actions.Shoot.clampWhenFinished = true
 
-      if (fireName && actions[fireName]) {
-        const fireAction = actions[fireName]
-        fireAction.reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.05).play()
-        fireAction.clampWhenFinished = true
-        const duration = (fireAction._clip?.duration ?? 0.3) * 1000
-        setTimeout(() => {
-          fireAction.fadeOut(0.1)
-          if (idleName) actions[idleName]?.reset().fadeIn(0.15).play()
-        }, Math.max(duration, 50))
-      }
+      const duration = (actions.Shoot._clip?.duration ?? 0.4) * 1000
+      setTimeout(() => {
+        canFireRef.current = true
+      }, Math.max(duration * 0.8, 100))
     }
     window.addEventListener('mousedown', onDown)
     return () => window.removeEventListener('mousedown', onDown)
-  }, [active, actions, names])
+  }, [active, actions])
 
   useFrame((_, dt) => {
     if (!groupRef.current) return
