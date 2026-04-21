@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
 import Crosshair from './Crosshair'
+import GunViewModel from './GunViewModel'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -370,6 +371,9 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
               active={countdown === 0}
               theme={theme}
             />
+            <Suspense fallback={null}>
+              <GunViewModel active={isPointerLocked && countdown === 0} />
+            </Suspense>
           </>
         )}
       </Canvas>
