@@ -22,6 +22,15 @@ export default function GunViewModel({ active = true }) {
   const { scene, animations } = useGLTF(MODEL_PATH)
   const { actions }           = useAnimations(animations, groupRef)
 
+  // 모델 실제 크기 로그 (튜닝용)
+  useEffect(() => {
+    const box = new THREE.Box3().setFromObject(scene)
+    const size = new THREE.Vector3()
+    box.getSize(size)
+    console.log('[GunViewModel] 모델 사이즈:', size)
+    console.log('[GunViewModel] 모델 센터:', box.getCenter(new THREE.Vector3()))
+  }, [scene])
+
   // Draw 애니메이션으로 시작 (총 꺼내는 모션)
   useEffect(() => {
     if (!actions.Draw) return
@@ -81,14 +90,14 @@ export default function GunViewModel({ active = true }) {
     _localQ.setFromEuler(_euler)
     groupRef.current.quaternion.multiplyQuaternions(camera.quaternion, _localQ)
 
-    groupRef.current.visible = active
+    groupRef.current.visible = true // DEBUG: 항상 표시
   })
 
   return (
     <group ref={groupRef}>
       <primitive
         object={scene}
-        scale={0.08}
+        scale={1.0}
         rotation={[0, Math.PI, 0]}
         position={[0, 0, 0]}
       />
