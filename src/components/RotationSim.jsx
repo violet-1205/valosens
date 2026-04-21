@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { playConfirm, playComplete } from '../utils/sounds'
 import { Canvas, useThree } from '@react-three/fiber'
 import Crosshair from './Crosshair'
-import GunViewModel from './GunViewModel'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -276,9 +275,6 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
               onSphereClick={handleSphereClick}
               theme={theme}
             />
-            <Suspense fallback={null}>
-              <GunViewModel active={isPointerLocked} />
-            </Suspense>
           </>
         )}
       </Canvas>
