@@ -10,48 +10,48 @@ const _localQ = new THREE.Quaternion()
 const MODEL_PATH = '/mark_23__animated_free.glb'
 const flashMat   = new THREE.MeshBasicMaterial({ color: '#ffdd33', transparent: true, opacity: 0.92 })
 
+// scale=0.012 기준 센터 보정값
+// center y=138.827 → -138.827*0.012 = -1.666
+// center z=-10.562 → +10.562*0.012 = 0.127
+const SCALE    = 0.012
+const OFFSET_Y = -(138.827 * SCALE)   // -1.666
+const OFFSET_Z =  (10.562  * SCALE)   //  0.127
+
 export default function GunViewModel({ active = true }) {
   const groupRef      = useRef()
   const muzzleRef     = useRef()
   const flashLightRef = useRef()
   const spring        = useRef({ pos: 0, vel: 0 })
   const flashTimer    = useRef(0)
-  const canFireRef    = useRef(true)
   const { camera }    = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
   const { actions }           = useAnimations(animations, groupRef)
 
-
-  // Draw 애니메이션으로 시작 (총 꺼내는 모션)
+  // Draw 스킵 — 마지막 프레임으로 즉시 점프 (총이 바로 들려있는 상태)
   useEffect(() => {
     if (!actions.Draw) return
-    actions.Draw.reset()
-      .setLoop(THREE.LoopOnce, 1)
-      .fadeIn(0.1)
-      .play()
-    actions.Draw.clampWhenFinished = true
+    const a = actions.Draw
+    a.reset().setLoop(THREE.LoopOnce, 1).play()
+    a.clampWhenFinished = true
+    // 마지막 프레임으로 즉시 이동
+    a.time = a._clip.duration
   }, [actions])
 
-  // 발사: Shoot → 끝나면 멈춤 (마지막 프레임 유지)
+  // 발사 — 즉시 반응, 연사 가능
   useEffect(() => {
     const onDown = () => {
-      if (!active || !canFireRef.current || !actions.Shoot) return
-      canFireRef.current = false
+      if (!active || !actions.Shoot) return
 
       spring.current.vel = 0.07
       flashTimer.current = 0.12
 
-      actions.Shoot.reset()
+      // 진행 중이던 Shoot 애니메이션 즉시 리셋 후 재생
+      actions.Shoot
+        .reset()
         .setLoop(THREE.LoopOnce, 1)
-        .fadeIn(0.04)
         .play()
       actions.Shoot.clampWhenFinished = true
-
-      const duration = (actions.Shoot._clip?.duration ?? 0.4) * 1000
-      setTimeout(() => {
-        canFireRef.current = true
-      }, Math.max(duration * 0.8, 100))
     }
     window.addEventListener('mousedown', onDown)
     return () => window.removeEventListener('mousedown', onDown)
@@ -73,7 +73,7 @@ export default function GunViewModel({ active = true }) {
     }
     if (flashLightRef.current) flashLightRef.current.intensity = ft * 3.0
 
-    _offset.set(0.28, -0.22, -0.50)
+    _offset.set(0.25, -0.20, -0.42)
     _offset.applyQuaternion(camera.quaternion)
     _offset.add(camera.position)
     groupRef.current.position.copy(_offset)
@@ -89,16 +89,16 @@ export default function GunViewModel({ active = true }) {
     <group ref={groupRef}>
       <primitive
         object={scene}
-        scale={0.006}
+        scale={SCALE}
         rotation={[0, Math.PI, 0]}
-        position={[0, -0.83, 0.06]}
+        position={[0, OFFSET_Y, OFFSET_Z]}
       />
-      <mesh ref={muzzleRef} position={[0, 0.02, -0.20]} visible={false} material={flashMat}>
+      <mesh ref={muzzleRef} position={[0, 0.02, -0.25]} visible={false} material={flashMat}>
         <sphereGeometry args={[0.03, 8, 8]} />
       </mesh>
       <pointLight
         ref={flashLightRef}
-        position={[0, 0.02, -0.20]}
+        position={[0, 0.02, -0.25]}
         color="#ff9900"
         intensity={0}
         distance={1.5}
