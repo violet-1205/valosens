@@ -1,128 +1,135 @@
 /* @refresh reset */
-import { useRef, useEffect, useMemo } from 'react'
-import { useThree, useFrame } from '@react-three/fiber'
-import { useGLTF, useAnimations } from '@react-three/drei'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { useAnimations, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
-// ─── 위치 · 크기 조정 상수 ────────────────────────────────────
-//
-//  VIEW_OFFSET  — 카메라 기준 총기 위치
-//    x: 양수 → 오른쪽,   음수 → 왼쪽
-//    y: 양수 → 위,       음수 → 아래  (내리면 손이 화면 밖으로)
-//    z: 음수 → 앞(가까이),  (너무 크면 카메라 안으로 들어감)
-//
-//  MESH_SCALE   — 총기 전체 크기 (클수록 커짐)
-//
-//  MESH_ROT     — 총기 회전 [X, Y, Z] 라디안
-//    Y에 Math.PI 더하면 총구가 앞을 향함
-//    Y의 추가값으로 좌우 각도 조절
-//    X로 총구 위아래 기울기 조절
-//
-//  MESH_POS     — 메시 자체 오프셋 (그룹 기준, 미세 조정용)
-//
-// ─────────────────────────────────────────────────────────────
-const VIEW_OFFSET = new THREE.Vector3(0.22, -0.22, -0.45)  // 오른쪽·아래·앞
-const MESH_SCALE  = 0.13                                    // 크기
-const MESH_ROT    = [0.05, Math.PI + 0.30, -0.02]          // [X기울기, Y방향, Z틸트]
-const MESH_POS    = [0.0, -0.05, 0.0]                      // 미세 위치 오프셋
-// ─────────────────────────────────────────────────────────────
+const MODEL_PATH = '/mark_23__animated_free.glb'
+
+// Model placement (tune these values as needed)
+const VIEW_OFFSET = new THREE.Vector3(1.60, -0.90, -2.20)
+const MESH_SCALE = 0.02
+const MESH_ROT = [0.12, Math.PI + 0.10, -0.02]
+const MESH_POS = [0.0, 0.0, 0.0]
+
+const LOCAL_TILT = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
+const RECOIL_KICK = 0.14
+const RECOIL_STIFF = 26
+const RECOIL_DAMPING = 11
+const RECOIL_PITCH = 2.2
 
 const _offset = new THREE.Vector3()
-const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
-const _localQ = new THREE.Quaternion()
-const LOCAL_TILT = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
-
-// 블로우백 스프링 파라미터
-const RECOIL_KICK     = 0.14   // 발사 시 초기 반동 강도 (클수록 세게 튐)
-const RECOIL_STIFF    = 26     // 복원 강도 (클수록 빠르게 원위치)
-const RECOIL_DAMPING  = 11     // 감쇠 (클수록 진동 없이 멈춤)
-const RECOIL_PITCH    = 2.2    // 반동 시 총구 들림 각도 배율
-
-const MODEL_PATH = '/fps_animations_vsk.glb'
+const _localEuler = new THREE.Euler(0, 0, 0, 'YXZ')
+const _localQuat = new THREE.Quaternion()
+const _box = new THREE.Box3()
+const _center = new THREE.Vector3()
 
 export default function GunViewModel({ active = true }) {
-  const groupRef   = useRef()
-  const sceneRef   = useRef()
-  const spring     = useRef({ pos: 0, vel: 0 })
+  const groupRef = useRef(null)
+  const modelRootRef = useRef(null)
+  const spring = useRef({ pos: 0, vel: 0 })
+  const idleActionRef = useRef(null)
+  const fireActionRef = useRef(null)
   const { camera } = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
-  const modelScene = useMemo(() => scene.clone(true), [scene])
-  const { actions, names } = useAnimations(animations, sceneRef)
+  const modelScene = useMemo(() => {
+    const cloned = scene.clone(true)
+    // Re-center model so VIEW_OFFSET/MESH_POS adjustments are immediately visible.
+    _box.setFromObject(cloned)
+    if (!_box.isEmpty()) {
+      _box.getCenter(_center)
+      cloned.position.sub(_center)
+    }
+    return cloned
+  }, [scene])
+  const { actions, names } = useAnimations(animations, modelRootRef)
 
   useEffect(() => {
-    modelScene.traverse(obj => {
+    modelScene.traverse((obj) => {
       if (obj.isMesh) obj.frustumCulled = false
     })
   }, [modelScene])
 
-  // 마운트 시 Idle 루프
   useEffect(() => {
     if (!names.length) return
-    const idleName = names.find(n => /idle/i.test(n))
-    if (idleName && actions[idleName]) {
-      actions[idleName].setLoop(THREE.LoopRepeat, Infinity)
-      actions[idleName].play()
+    const idleName = names[0] ?? null
+    const fireName = names[2] ?? null
+
+    Object.values(actions).forEach((action) => action?.stop())
+
+    idleActionRef.current = idleName ? actions[idleName] ?? null : null
+    fireActionRef.current = fireName ? actions[fireName] ?? null : null
+
+    if (names.length < 3) {
+      console.warn('[GunViewModel] Expected at least 3 animations for current model')
+    }
+
+    // Keep the first animation as a static base pose.
+    const idleAction = idleActionRef.current
+    if (idleAction) {
+      idleAction.reset()
+      idleAction.setLoop(THREE.LoopOnce, 1)
+      idleAction.clampWhenFinished = true
+      idleAction.play()
+      idleAction.paused = true
+      idleAction.time = 0
     }
   }, [actions, names])
 
-  // 클릭 → Fire 1회 → Idle 복귀 + 블로우백
   useEffect(() => {
-    if (!names.length) return
-    const fireName = names.find(n => /fire/i.test(n)) ?? names[0]
-    const idleName = names.find(n => /idle/i.test(n))
-
-    const onDown = () => {
+    const onMouseDown = () => {
       if (!active) return
 
-      // 블로우백 킥
       spring.current.vel = RECOIL_KICK
 
-      if (!actions[fireName]) return
-      if (idleName && actions[idleName]) actions[idleName].stop()
+      const fireAction = fireActionRef.current
+      if (!fireAction) return
 
-      const action = actions[fireName]
-      action.stop().reset()
-      action.setLoop(THREE.LoopOnce, 1)
-      action.clampWhenFinished = false
-      action.play()
+      const idleAction = idleActionRef.current
+      if (idleAction) idleAction.stop()
 
-      const mixer = action.getMixer()
-      const onFinished = (e) => {
-        if (e.action !== action) return
+      fireAction.stop()
+      fireAction.reset()
+      fireAction.setLoop(THREE.LoopOnce, 1)
+      fireAction.clampWhenFinished = true
+      fireAction.play()
+
+      const mixer = fireAction.getMixer()
+      const onFinished = (event) => {
+        if (event.action !== fireAction) return
         mixer.removeEventListener('finished', onFinished)
-        if (idleName && actions[idleName]) {
-          actions[idleName].reset()
-          actions[idleName].setLoop(THREE.LoopRepeat, Infinity)
-          actions[idleName].play()
+
+        // Return to the static base pose after the shot animation.
+        if (idleAction) {
+          idleAction.reset()
+          idleAction.setLoop(THREE.LoopOnce, 1)
+          idleAction.clampWhenFinished = true
+          idleAction.play()
+          idleAction.paused = true
+          idleAction.time = 0
         }
       }
       mixer.addEventListener('finished', onFinished)
     }
 
-    window.addEventListener('mousedown', onDown)
-    return () => window.removeEventListener('mousedown', onDown)
-  }, [active, actions, names])
+    window.addEventListener('mousedown', onMouseDown)
+    return () => window.removeEventListener('mousedown', onMouseDown)
+  }, [active])
 
   useFrame((_, dt) => {
     if (!groupRef.current) return
 
-    // 스프링 물리
     const s = spring.current
     s.vel += (-s.pos * RECOIL_STIFF - s.vel * RECOIL_DAMPING) * dt
     s.pos += s.vel * dt
-    const recoil = s.pos
 
-    // 카메라를 따라가는 위치
-    _offset.copy(VIEW_OFFSET)
-    _offset.applyQuaternion(camera.quaternion)
-    _offset.add(camera.position)
+    _offset.copy(VIEW_OFFSET).applyQuaternion(camera.quaternion).add(camera.position)
     groupRef.current.position.copy(_offset)
 
-    // 카메라 회전 + 반동 피치
-    _euler.set(LOCAL_TILT.x - recoil * RECOIL_PITCH, LOCAL_TILT.y, LOCAL_TILT.z)
-    _localQ.setFromEuler(_euler)
-    groupRef.current.quaternion.multiplyQuaternions(camera.quaternion, _localQ)
+    _localEuler.set(LOCAL_TILT.x - s.pos * RECOIL_PITCH, LOCAL_TILT.y, LOCAL_TILT.z)
+    _localQuat.setFromEuler(_localEuler)
+    groupRef.current.quaternion.multiplyQuaternions(camera.quaternion, _localQuat)
 
     groupRef.current.visible = active
   })
@@ -130,7 +137,7 @@ export default function GunViewModel({ active = true }) {
   return (
     <group ref={groupRef}>
       <primitive
-        ref={sceneRef}
+        ref={modelRootRef}
         object={modelScene}
         scale={MESH_SCALE}
         rotation={MESH_ROT}

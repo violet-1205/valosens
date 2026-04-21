@@ -273,6 +273,10 @@ function Home() {
     navigate('/test1')
   }
 
+  const handleDevStart = () => {
+    navigate('/dev/test1')
+  }
+
   return (
     <Layout>
       {showSetup && (
@@ -311,12 +315,24 @@ function Home() {
 
           {/* CTA */}
           <div className="flex flex-col items-center gap-3">
-            <button
-              onClick={() => setShowSetup(true)}
-              className="px-7 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base shadow-lg shadow-[#FF4655]/20 transition-all active:scale-[0.98] hover:-translate-y-0.5"
-            >
-              테스트 시작하기
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => setShowSetup(true)}
+                className="px-7 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base shadow-lg shadow-[#FF4655]/20 transition-all active:scale-[0.98] hover:-translate-y-0.5"
+              >
+                테스트 시작하기
+              </button>
+              <button
+                onClick={handleDevStart}
+                className={`px-7 py-3.5 rounded-2xl border font-bold text-base transition-all active:scale-[0.98] hover:-translate-y-0.5 ${
+                  dark
+                    ? 'border-[#2A3D4F] text-[#ECE8E1] hover:border-[#FF4655] hover:text-[#FF4655]'
+                    : 'border-[#DDD8D2] text-[#1A1F2E] hover:border-[#FF4655] hover:text-[#FF4655]'
+                }`}
+              >
+                개발 버튼
+              </button>
+            </div>
             <span className={`text-sm ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
               무료 · 3분 소요
             </span>

@@ -6,6 +6,9 @@ import GunViewModel from './GunViewModel'
 import { PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
+const CAMERA_CONFIG = { position: [0, 0, 0], fov: 75, near: 0.01, far: 1000 }
+const PITCH_LIMIT = Math.PI / 2.2
+
 function CuteMarker({ pos }) {
   return (
     <mesh position={pos} userData={{ isMarker: true }}>
@@ -31,7 +34,7 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
       const finalSensitivity = baseSensitivity * sensitivityMultiplier
       rotation.current.y -= movementX * finalSensitivity
       rotation.current.x -= movementY * finalSensitivity
-      rotation.current.x = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, rotation.current.x))
+      rotation.current.x = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, rotation.current.x))
       camera.rotation.copy(rotation.current)
     },
     [camera, sensitivityMultiplier]
@@ -87,9 +90,15 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme 
   )
 }
 
-export default function RotationSim({ onComplete, sensitivity, theme = 'dark', onMovementChange }) {
+export default function RotationSim({
+  onComplete,
+  sensitivity,
+  theme = 'dark',
+  onMovementChange,
+  devInstantPreview = false,
+}) {
   const [movement, setMovement] = useState(0)
-  const [started, setStarted] = useState(false)
+  const [started, setStarted] = useState(devInstantPreview)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
   const [clickCount, setClickCount] = useState(0)
   const [markers, setMarkers] = useState([])
@@ -99,6 +108,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
   const startYawRef = useRef(0)
 
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
+  const modelActive = devInstantPreview ? true : started && isPointerLocked
 
   useEffect(() => {
     onMovementChange?.(movement)
@@ -190,7 +200,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
       className={`w-full h-full relative ${bg} ${isPointerLocked ? 'cursor-none' : 'cursor-default'}`}
       onClick={handleContainerClick}
     >
-      {!started && (
+      {!started && !devInstantPreview && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
             className={`text-center p-8 rounded-3xl border shadow-2xl max-w-md ${
@@ -235,7 +245,7 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
         </div>
       )}
 
-      {started && !isPointerLocked && (
+      {started && !isPointerLocked && !devInstantPreview && (
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
             <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
@@ -245,14 +255,14 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
         </div>
       )}
 
-      <Crosshair visible={started && isPointerLocked} />
+      <Crosshair visible={devInstantPreview ? true : started && isPointerLocked} />
 
-      {started && clickCount === 0 && (
+      {started && clickCount === 0 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded-xl backdrop-blur border border-white/20">
               시작 지점을 바라보고 클릭하세요
           </div>
       )}
-      {started && clickCount === 1 && (
+      {started && clickCount === 1 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse">
               360도 회전 후 처음 지점을 다시 클릭하세요!
           </div>
@@ -261,12 +271,15 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
-        camera={{ position: [0, 0, 0], fov: 75 }}
+        camera={CAMERA_CONFIG}
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
+        <Suspense fallback={null}>
+          <GunViewModel active={modelActive} />
+        </Suspense>
         {started && (
           <>
-            <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
+            <PerspectiveCamera makeDefault {...CAMERA_CONFIG} />
             <Scene
               sensitivity={sensitivity}
               markers={markers}
@@ -276,9 +289,6 @@ export default function RotationSim({ onComplete, sensitivity, theme = 'dark', o
               onSphereClick={handleSphereClick}
               theme={theme}
             />
-            <Suspense fallback={null}>
-              <GunViewModel active={isPointerLocked} />
-            </Suspense>
           </>
         )}
       </Canvas>

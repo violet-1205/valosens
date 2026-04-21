@@ -8,6 +8,8 @@ import * as THREE from 'three'
 
 const TOTAL_TARGETS = 20
 const TIME_LIMIT_MS = 500
+const CAMERA_CONFIG = { position: [0, 0, 0], fov: 75, near: 0.01, far: 1000 }
+const PITCH_LIMIT = Math.PI / 2.2
 
 function PlayerController({ sensitivityMultiplier = 1 }) {
   const { camera } = useThree()
@@ -21,7 +23,7 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
       const finalSensitivity = baseSensitivity * sensitivityMultiplier
       rotation.current.y -= movementX * finalSensitivity
       rotation.current.x -= movementY * finalSensitivity
-      rotation.current.x = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, rotation.current.x))
+      rotation.current.x = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, rotation.current.x))
       camera.rotation.copy(rotation.current)
     },
     [camera, sensitivityMultiplier]
@@ -300,12 +302,12 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: 'high-performance', alpha: false }}
-        camera={{ position: [0, 0, 0], fov: 75 }}
+        camera={CAMERA_CONFIG}
       >
         <color attach="background" args={[theme === 'dark' ? '#0F1923' : '#f5f0ea']} />
         {started && countdown === 0 && (
           <>
-            <PerspectiveCamera makeDefault position={[0, 0, 0]} fov={75} />
+            <PerspectiveCamera makeDefault {...CAMERA_CONFIG} />
             <Scene
               onHit={handleHit}
               onMiss={handleMiss}
