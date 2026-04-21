@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import Crosshair from './Crosshair'
@@ -315,7 +315,9 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
               active={currentIndex < TOTAL_TARGETS}
               theme={theme}
             />
-            <GunViewModel active={isPointerLocked} />
+            <Suspense fallback={null}>
+              <GunViewModel active={isPointerLocked} />
+            </Suspense>
           </>
         )}
       </Canvas>

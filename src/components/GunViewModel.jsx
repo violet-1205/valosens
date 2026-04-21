@@ -77,21 +77,20 @@ export default function GunViewModel({ active = true }) {
   return (
     <group ref={groupRef}>
 
-      {/* Gun model — grip is at bottom-back, so offset gun up so grip meets hand */}
       <primitive
         object={model}
         scale={0.10}
         rotation={[0, Math.PI, 0]}
-        position={[0, 0.02, 0]}
+        position={[0, 0, 0]}
       />
 
-      {/* Muzzle flash */}
-      <mesh ref={muzzleRef} position={[0, 0.04, -0.22]} visible={false} material={flashMat}>
+      {/* Muzzle flash — position at barrel tip */}
+      <mesh ref={muzzleRef} position={[0, 0.02, -0.18]} visible={false} material={flashMat}>
         <sphereGeometry args={[0.035, 8, 8]} />
       </mesh>
       <pointLight
         ref={flashLightRef}
-        position={[0, 0.04, -0.22]}
+        position={[0, 0.02, -0.18]}
         color="#ff9900"
         intensity={0}
         distance={1.8}
