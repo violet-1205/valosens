@@ -23,18 +23,20 @@ export default function GunViewModel({ active = true }) {
     if (names.length) console.log('[Gun] 애니메이션:', names)
   }, [names])
 
-  // 발사 애니메이션만 — reload/draw/hide 제외
+  // 발사 애니메이션 — 클릭 시 재생
   useEffect(() => {
     if (!names.length) return
-    const fireName = names.find(n => /fire|shoot|recoil|attack|pistol|shoot/i.test(n))
-                  ?? names.find(n => !/reload|draw|hide|idle/i.test(n))
-                  ?? names[0]
+    const fireName = names[0] // animated_pistol.glb 은 'allanimations' 단일 클립
 
     const onDown = () => {
       if (!active || !actions[fireName]) return
-      spring.current.vel = 0.08
-      actions[fireName].reset().setLoop(THREE.LoopOnce, 1).play()
-      actions[fireName].clampWhenFinished = true
+      spring.current.vel = 0.12
+      const action = actions[fireName]
+      action.stop()
+      action.reset()
+      action.setLoop(THREE.LoopOnce, 1)
+      action.clampWhenFinished = true
+      action.play()
     }
     window.addEventListener('mousedown', onDown)
     return () => window.removeEventListener('mousedown', onDown)
@@ -49,12 +51,12 @@ export default function GunViewModel({ active = true }) {
     const recoil = spring.current.pos
 
     // 우하단 고정 — x:오른쪽, y:아래, z:카메라 거리
-    _offset.set(0.32, -0.28, -0.45)
+    _offset.set(0.30, -0.22, -0.42)
     _offset.applyQuaternion(camera.quaternion)
     _offset.add(camera.position)
     groupRef.current.position.copy(_offset)
 
-    _euler.set(-0.05 - recoil * 2.8, 0.10, -0.04)
+    _euler.set(-0.05 - recoil * 2.5, 0.10, -0.03)
     _localQ.setFromEuler(_euler)
     groupRef.current.quaternion.multiplyQuaternions(camera.quaternion, _localQ)
 
