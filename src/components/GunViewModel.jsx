@@ -5,9 +5,9 @@ import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 
 const MODEL_PATH = '/Fps%20Rig.glb'
-const VIEW_OFFSET = new THREE.Vector3(0.55, -0.42, -0.9)
-const MESH_SCALE = 0.03
-const MESH_ROT = new THREE.Euler(0, Math.PI, 0)
+const VIEW_OFFSET = new THREE.Vector3(0.1, -0.44, -0.9)
+const MESH_SCALE = 0.15
+const MESH_ROT = new THREE.Euler(0.1, Math.PI * 2.5, 0)
 const LOCAL_TILT = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
 
 const _offset = new THREE.Vector3()
@@ -16,7 +16,7 @@ const _localQuat = new THREE.Quaternion()
 
 export default function GunViewModel({ active = true, shootTrigger = 0 }) {
   const groupRef = useRef(null)
-  const isShooting = useRef(false)
+  const finishListenerRef = useRef(null)
 
   const { scene, animations } = useGLTF(MODEL_PATH)
   const { actions, mixer } = useAnimations(animations, groupRef)
@@ -43,33 +43,40 @@ export default function GunViewModel({ active = true, shootTrigger = 0 }) {
     }
   }, [actions])
 
-  // Shoot animation on trigger
+  // Shoot animation on trigger — always restart immediately on each click
   useEffect(() => {
     if (shootTrigger === 0) return
-    if (!actions) return
+    if (!actions || !mixer) return
     const shoot = actions['Armature|Shoot']
     const idle = actions['Armature|Idle']
-    if (!shoot || isShooting.current) return
+    if (!shoot) return
 
-    isShooting.current = true
+    // Remove any previous finish listener to avoid duplicates
+    if (finishListenerRef.current) {
+      mixer.removeEventListener('finished', finishListenerRef.current)
+      finishListenerRef.current = null
+    }
+
+    // Immediately restart shoot animation (handles rapid clicks)
+    shoot.stop()
     shoot.reset()
     shoot.setLoop(THREE.LoopOnce, 1)
     shoot.clampWhenFinished = true
-    shoot.fadeIn(0.05)
+    shoot.timeScale = 1
     shoot.play()
 
     const onFinish = (e) => {
       if (e.action !== shoot) return
-      isShooting.current = false
-      shoot.fadeOut(0.1)
+      mixer.removeEventListener('finished', finishListenerRef.current)
+      finishListenerRef.current = null
       if (idle) {
         idle.reset()
         idle.setLoop(THREE.LoopRepeat, Infinity)
-        idle.fadeIn(0.1)
+        idle.fadeIn(0.15)
         idle.play()
       }
-      mixer.removeEventListener('finished', onFinish)
     }
+    finishListenerRef.current = onFinish
     mixer.addEventListener('finished', onFinish)
   }, [shootTrigger, actions, mixer])
 
