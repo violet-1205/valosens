@@ -73,7 +73,7 @@ export default function GunViewModel({ active = true }) {
     }
     if (flashLightRef.current) flashLightRef.current.intensity = ft * 3.0
 
-    _offset.set(0.25, -0.20, -0.42)
+    _offset.set(0.12, -0.20, -0.42)
     _offset.applyQuaternion(camera.quaternion)
     _offset.add(camera.position)
     groupRef.current.position.copy(_offset)
@@ -93,12 +93,12 @@ export default function GunViewModel({ active = true }) {
         rotation={[0, Math.PI, 0]}
         position={[0, OFFSET_Y, OFFSET_Z]}
       />
-      <mesh ref={muzzleRef} position={[0, 0.02, -0.25]} visible={false} material={flashMat}>
+      <mesh ref={muzzleRef} position={[0, 0.12, -0.12]} visible={false} material={flashMat}>
         <sphereGeometry args={[0.03, 8, 8]} />
       </mesh>
       <pointLight
         ref={flashLightRef}
-        position={[0, 0.02, -0.25]}
+        position={[0, 0.12, -0.12]}
         color="#ff9900"
         intensity={0}
         distance={1.5}
