@@ -26,9 +26,11 @@ export default function GunViewModel({ active = true }) {
   useEffect(() => {
     const box = new THREE.Box3().setFromObject(scene)
     const size = new THREE.Vector3()
+    const center = new THREE.Vector3()
     box.getSize(size)
-    console.log('[GunViewModel] 모델 사이즈:', size)
-    console.log('[GunViewModel] 모델 센터:', box.getCenter(new THREE.Vector3()))
+    box.getCenter(center)
+    console.log(`[GunViewModel] 사이즈 x:${size.x.toFixed(3)} y:${size.y.toFixed(3)} z:${size.z.toFixed(3)}`)
+    console.log(`[GunViewModel] 센터  x:${center.x.toFixed(3)} y:${center.y.toFixed(3)} z:${center.z.toFixed(3)}`)
   }, [scene])
 
   // Draw 애니메이션으로 시작 (총 꺼내는 모션)
