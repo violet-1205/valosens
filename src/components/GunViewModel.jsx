@@ -7,44 +7,46 @@ const _offset = new THREE.Vector3()
 const _euler  = new THREE.Euler(0, 0, 0, 'YXZ')
 const _localQ = new THREE.Quaternion()
 
-const MODEL_PATH = '/mark_23__animated_free.glb'
-
-const SCALE    = 0.0096
-const OFFSET_Y = -(138.827 * SCALE)
-const OFFSET_Z =  (10.562  * SCALE)
+const MODEL_PATH = '/animated_pistol.glb'
 
 export default function GunViewModel({ active = true }) {
   const groupRef   = useRef()
-  const sceneRef   = useRef()        // scene 직접 참조 → mixer root로 사용
+  const sceneRef   = useRef()
   const spring     = useRef({ pos: 0, vel: 0 })
+  const initDone   = useRef(false)
   const { camera } = useThree()
 
   const { scene, animations } = useGLTF(MODEL_PATH)
+  const { actions, names }    = useAnimations(animations, sceneRef)
 
-  // mixer root = scene (bone이 실제로 있는 곳)
-  const { actions } = useAnimations(animations, sceneRef)
-
-  // 마운트 시 Shoot 애니메이션 frame 0에서 대기
+  // 모델 사이즈 & 애니메이션 이름 확인용
   useEffect(() => {
-    if (!actions?.Shoot) return
-    actions.Shoot.reset()
-    actions.Shoot.setLoop(THREE.LoopOnce, 1)
-    actions.Shoot.clampWhenFinished = true
-    actions.Shoot.play()
-    actions.Shoot.paused = true   // frame 0에서 정지 (총 들고 있는 자세)
-  }, [actions])
+    const box = new THREE.Box3().setFromObject(scene)
+    const size = new THREE.Vector3()
+    const center = new THREE.Vector3()
+    box.getSize(size)
+    box.getCenter(center)
+    console.log(`[Gun] 사이즈 x:${size.x.toFixed(3)} y:${size.y.toFixed(3)} z:${size.z.toFixed(3)}`)
+    console.log(`[Gun] 센터  x:${center.x.toFixed(3)} y:${center.y.toFixed(3)} z:${center.z.toFixed(3)}`)
+    console.log('[Gun] 애니메이션:', names)
+  }, [scene, names])
 
-  // 클릭 → Shoot 재생
+  // 클릭 → 발사 애니메이션
   useEffect(() => {
     const onDown = () => {
-      if (!active || !actions?.Shoot) return
+      if (!active) return
       spring.current.vel = 0.07
-      actions.Shoot.paused = false   // 그냥 재생 재개 (reset 없이)
-      actions.Shoot.reset().play()   // 연속 클릭 시 처음부터 재생
+
+      // fire/shoot 계열 애니메이션 찾기
+      const fireName = names.find(n => /fire|shoot|recoil|attack|action/i.test(n)) ?? names[0]
+      if (!fireName || !actions[fireName]) return
+
+      actions[fireName].reset().setLoop(THREE.LoopOnce, 1).play()
+      actions[fireName].clampWhenFinished = true
     }
     window.addEventListener('mousedown', onDown)
     return () => window.removeEventListener('mousedown', onDown)
-  }, [active, actions])
+  }, [active, actions, names])
 
   useFrame((_, dt) => {
     if (!groupRef.current) return
@@ -71,9 +73,9 @@ export default function GunViewModel({ active = true }) {
       <primitive
         ref={sceneRef}
         object={scene}
-        scale={SCALE}
+        scale={1}
         rotation={[0, Math.PI, 0]}
-        position={[0, OFFSET_Y, OFFSET_Z]}
+        position={[0, 0, 0]}
       />
     </group>
   )
