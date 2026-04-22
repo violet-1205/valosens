@@ -54,3 +54,9 @@ html {
 .animate-fade-up-d1 { animation-delay: 0.1s; }
 .animate-fade-up-d2 { animation-delay: 0.2s; }
 .animate-fade-up-d3 { animation-delay: 0.3s; }
+
+@keyframes guide-slide {
+  0%   { transform: translateX(-6px); opacity: 0.6; }
+  50%  { transform: translateX(6px);  opacity: 1; }
+  100% { transform: translateX(-6px); opacity: 0.6; }
+}

@@ -279,7 +279,37 @@ export default function RotationSim({
               {t.rotHint1}
           </div>
       )}
-      {started && clickCount === 1 && !devInstantPreview && (
+      {started && clickCount === 1 && isPointerLocked && !devInstantPreview && (
+        <>
+          {/* 오른쪽 방향 가이드 화살표 */}
+          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-end pr-16">
+            <div className="flex items-center gap-1" style={{ animation: 'guide-slide 1.2s ease-in-out infinite' }}>
+              {[0, 1, 2].map((i) => (
+                <svg
+                  key={i}
+                  width="32" height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#ff4655"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ opacity: 0.4 + i * 0.3 }}
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              ))}
+            </div>
+          </div>
+
+          {/* 하단 힌트 */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
+            {t.rotHint2}
+            <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
+          </div>
+        </>
+      )}
+      {started && clickCount === 1 && !isPointerLocked && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
               {t.rotHint2}
               <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
