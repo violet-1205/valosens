@@ -21,6 +21,7 @@ function ValoButton({ onClick, children, type = 'button', className = '' }) {
         textTransform: 'uppercase',
         textDecoration: 'none',
         boxShadow: '0 0 0 1px inset rgba(236,232,225,0.3)',
+        borderRadius: '14px',
         background: 'transparent',
         border: 'none',
         cursor: 'pointer',
@@ -33,12 +34,12 @@ function ValoButton({ onClick, children, type = 'button', className = '' }) {
       {/* Right cut */}
       <span style={{ position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', width:1, height:8, background:'#0f1923', zIndex:10 }} />
 
-      <span style={{ position:'relative', width:'100%', height:'100%', display:'block', overflow:'hidden' }}>
+      <span style={{ position:'relative', width:'100%', height:'100%', display:'block', overflow:'hidden', borderRadius:'14px' }}>
         {/* Corner border (span.base) */}
         <span style={{
           boxSizing:'border-box', position:'absolute', zIndex:2,
           width:'100%', height:'100%', left:0, top:0,
-          border: '1px solid #ff4655',
+          border: '1px solid #ff4655', borderRadius: '14px',
         }}>
           {/* Top-left corner dot */}
           <span style={{ content:'""', width:2, height:2, left:-1, top:-1, background:'#0f1923', position:'absolute', transition:'0.3s ease-out all' }} />
