@@ -71,6 +71,7 @@ export const translations = {
     tapTitle: '탭샷 테스트',
     tapDesc: '나타나는 정지 타겟을 빠르게 조준하여 클릭하세요.',
     tapTimeHighlight: '0.5초',
+    tapTimeSuffix: '후 사라집니다.',
     tapInfo: (n) => `총 ${n}개의 타겟 · 발로란트의 멈추고 쏘는 에임 방식을 시뮬레이션합니다.`,
     tapCountdown: '3, 2, 1 카운트다운 후 타겟이 나타납니다.',
 
@@ -195,6 +196,7 @@ export const translations = {
     tapTitle: 'Tap-Shot Test',
     tapDesc: 'Quickly aim and click static targets as they appear.',
     tapTimeHighlight: '0.5s',
+    tapTimeSuffix: 'before disappearing.',
     tapInfo: (n) => `${n} targets total · Simulates Valorant's stop-and-shoot tap-shot style.`,
     tapCountdown: 'Targets appear after the 3, 2, 1 countdown.',
 

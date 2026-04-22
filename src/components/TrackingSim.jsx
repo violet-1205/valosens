@@ -238,7 +238,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
               }`}
             >
               {t.tapDesc}
-              {' '}<span className="text-[#ff4655] font-bold">{t.tapTimeHighlight}</span> 후 사라집니다.
+              {' '}<span className="text-[#ff4655] font-bold">{t.tapTimeHighlight}</span> {t.tapTimeSuffix}
             </p>
             <p
               className={`mb-6 text-xs ${
