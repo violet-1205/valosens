@@ -2,6 +2,78 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
+function ValoButton({ onClick, children, type = 'button', className = '' }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`relative inline-flex items-center justify-center ${className}`}
+      style={{
+        width: '240px',
+        height: '54px',
+        padding: '8px',
+        fontSize: '0.8rem',
+        fontWeight: 900,
+        color: hovered ? '#ece8e1' : '#ff4655',
+        textTransform: 'uppercase',
+        textDecoration: 'none',
+        boxShadow: '0 0 0 1px inset rgba(236,232,225,0.3)',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        letterSpacing: '0.05em',
+        transition: 'color 0.3s ease-out',
+      }}
+    >
+      {/* Left cut */}
+      <span style={{ position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:1, height:8, background:'#0f1923', zIndex:10 }} />
+      {/* Right cut */}
+      <span style={{ position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', width:1, height:8, background:'#0f1923', zIndex:10 }} />
+
+      <span style={{ position:'relative', width:'100%', height:'100%', display:'block', overflow:'hidden' }}>
+        {/* Corner border (span.base) */}
+        <span style={{
+          boxSizing:'border-box', position:'absolute', zIndex:2,
+          width:'100%', height:'100%', left:0, top:0,
+          border: '1px solid #ff4655',
+        }}>
+          {/* Top-left corner dot */}
+          <span style={{ content:'""', width:2, height:2, left:-1, top:-1, background:'#0f1923', position:'absolute', transition:'0.3s ease-out all' }} />
+        </span>
+
+        {/* Sliding pink bg (span.bg) */}
+        <span style={{
+          position:'absolute', left:'-5%', top:0,
+          background:'#ff4655',
+          width: hovered ? '110%' : '0%',
+          height:'100%', zIndex:3,
+          transition:'0.3s ease-out all',
+          transform:'skewX(-10deg)',
+        }} />
+
+        {/* Text layer (span.text) */}
+        <span style={{
+          zIndex:4, width:'100%', height:'100%',
+          position:'absolute', left:0, top:0,
+          display:'flex', alignItems:'center', justifyContent:'center',
+        }}>
+          {children}
+          {/* Bottom-right corner dot */}
+          <span style={{
+            position:'absolute', right:0, bottom:0,
+            width:4, height:4,
+            background: hovered ? '#ece8e1' : '#0f1923',
+            transition:'0.3s ease-out all', zIndex:5,
+          }} />
+        </span>
+      </span>
+    </button>
+  )
+}
+
 const DPI_PRESETS = [400, 800, 1600, 3200]
 
 function SetupModal({ theme, onClose, onConfirm }) {
@@ -189,13 +261,11 @@ function SetupModal({ theme, onClose, onConfirm }) {
         </div>
 
         {/* Confirm */}
-        <button
-          type="button"
-          onClick={() => onConfirm({ dpi, valorantSens: validSens, eDPI })}
-          className="w-full py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base transition-all active:scale-[0.98]"
-        >
-          테스트 시작하기 →
-        </button>
+        <div className="flex justify-center mt-2">
+          <ValoButton onClick={() => onConfirm({ dpi, valorantSens: validSens, eDPI })}>
+            테스트 시작하기
+          </ValoButton>
+        </div>
       </div>
     </div>
   )
@@ -312,12 +382,9 @@ function Home() {
           {/* CTA */}
           <div className="flex flex-col items-center gap-3">
             <div className="flex flex-col sm:flex-row items-center gap-3">
-              <button
-                onClick={() => setShowSetup(true)}
-                className="px-7 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold text-base shadow-lg shadow-[#FF4655]/20 transition-all active:scale-[0.98] hover:-translate-y-0.5"
-              >
+              <ValoButton onClick={() => setShowSetup(true)}>
                 테스트 시작하기
-              </button>
+              </ValoButton>
             </div>
             <span className={`text-sm ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
               무료 · 3분 소요
@@ -392,12 +459,9 @@ function Home() {
         <p className={`text-sm mb-6 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
           DPI와 인게임 감도만 있으면 바로 시작하실 수 있습니다
         </p>
-        <button
-          onClick={() => setShowSetup(true)}
-          className="px-8 py-3.5 rounded-2xl bg-[#FF4655] hover:bg-[#FF4655]/90 text-white font-bold transition-all active:scale-[0.98] hover:-translate-y-0.5 shadow-lg shadow-[#FF4655]/20"
-        >
+        <ValoButton onClick={() => setShowSetup(true)}>
           감도 테스트 시작
-        </button>
+        </ValoButton>
       </section>
     </Layout>
   )
