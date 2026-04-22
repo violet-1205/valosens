@@ -282,7 +282,7 @@ export default function RotationSim({
       {started && clickCount === 1 && isPointerLocked && !devInstantPreview && (
         <>
           {/* 오른쪽 방향 가이드 화살표 */}
-          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-start pl-16">
+          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-start pl-48">
             <div className="flex flex-col items-center gap-1">
               <span className="text-white/50 text-xs mb-2 font-semibold tracking-widest uppercase">→</span>
               <div className="flex items-center gap-0" style={{ animation: 'guide-slide 1.0s ease-in-out infinite' }}>
