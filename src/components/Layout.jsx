@@ -95,7 +95,7 @@ function Layout({ children, isTestPage = false }) {
     return () => window.removeEventListener('mousemove', handler)
   }, [testActive, pointerLocked])
 
-  const uiHidden = isTestPage && testActive && pointerLocked
+  const uiHidden = isTestPage && testActive
   const showHeader = !uiHidden || mouseNearTop
   const showFooter = !uiHidden || mouseNearBottom
 
