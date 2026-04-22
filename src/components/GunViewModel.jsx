@@ -5,8 +5,8 @@ import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 
 const MODEL_PATH = '/Fps%20Rig.glb'
-const VIEW_OFFSET = new THREE.Vector3(0.1, -0.44, -0.9)
-const MESH_SCALE = 0.15
+const VIEW_OFFSET = new THREE.Vector3(0, -0.94, -0.9)
+const MESH_SCALE = 0.29
 const MESH_ROT = new THREE.Euler(0.1, Math.PI * 2.5, 0)
 const LOCAL_TILT = new THREE.Euler(-0.04, 0.06, -0.02, 'YXZ')
 
