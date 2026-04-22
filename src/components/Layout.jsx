@@ -170,17 +170,16 @@ function Layout({ children, isTestPage = false }) {
 
   return (
     <div className={`min-h-screen flex flex-col ${dark ? 'bg-[#0F1923] text-[#ECE8E1]' : 'bg-[#F5F0EA] text-[#1A1F2E]'}`}>
-      {/* Navbar wrapper — collapses upward during test */}
-      <div
-        className="transition-[max-height,opacity] duration-300 ease-in-out"
-        style={{
-          maxHeight: showHeader ? '64px' : '0px',
+      {/* Navbar */}
+      <header
+        className={`z-40 border-b backdrop-blur-md transition-[transform,opacity] duration-300 ease-in-out ${
+          testActive ? 'fixed top-0 left-0 right-0' : 'sticky top-0'
+        } ${dark ? 'bg-[#0F1923]/90 border-[#2A3D4F]' : 'bg-[#F5F0EA]/90 border-[#DDD8D2]'}`}
+        style={testActive ? {
+          transform: showHeader ? 'translateY(0)' : 'translateY(-100%)',
           opacity: showHeader ? 1 : 0,
-          overflow: showHeader ? 'visible' : 'hidden',
-          pointerEvents: showHeader ? 'auto' : 'none',
-        }}
+        } : undefined}
       >
-      <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${dark ? 'bg-[#0F1923]/90 border-[#2A3D4F]' : 'bg-[#F5F0EA]/90 border-[#DDD8D2]'}`}>
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
 
           {/* Logo */}
@@ -406,7 +405,6 @@ function Layout({ children, isTestPage = false }) {
           </div>
         </div>
       </header>
-      </div>
 
       {/* Main */}
       <main className="flex-1 w-full flex flex-col">
@@ -417,19 +415,22 @@ function Layout({ children, isTestPage = false }) {
         )}
       </main>
 
-      {/* Footer wrapper — collapses downward during test */}
-      <div
-        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style={{ maxHeight: showFooter ? '56px' : '0px' }}
+      {/* Footer */}
+      <footer
+        className={`border-t transition-[transform,opacity] duration-300 ease-in-out ${
+          testActive ? 'fixed bottom-0 left-0 right-0 z-40' : ''
+        } ${dark ? 'border-[#2A3D4F] bg-[#0F1923]' : 'border-[#DDD8D2] bg-[#F5F0EA]'}`}
+        style={testActive ? {
+          transform: showFooter ? 'translateY(0)' : 'translateY(100%)',
+          opacity: showFooter ? 1 : 0,
+        } : undefined}
       >
-      <footer className={`border-t ${dark ? 'border-[#2A3D4F]' : 'border-[#DDD8D2]'}`}>
         <div className="max-w-6xl mx-auto px-5 h-12 flex items-center justify-center">
           <span className={`text-xs ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
             © 2026 ValoSens
           </span>
         </div>
       </footer>
-      </div>
     </div>
   )
 }
