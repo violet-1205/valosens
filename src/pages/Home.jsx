@@ -205,7 +205,7 @@ const tests = [
   {
     num: '01',
     title: '360° 회전 정밀도',
-    desc: '한 바퀴 돌고 원점으로 돌아옵니다. 각도 편차로 얼마나 정확하게 돌아오는지 확인합니다.',
+    desc: '아무 곳이나 클릭 후 오른쪽으로 360° 회전하고 같은 지점으로 돌아옵니다. 각도 편차로 회전 정밀도를 측정합니다.',
     tag: '회전 제어',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
