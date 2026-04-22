@@ -231,14 +231,14 @@ export default function RotationSim({
                 theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
-              3D 환경에서 마우스를 움직여 360° 회전할 때의 실제 이동량을 측정합니다.
+              아무 곳이나 클릭 후 오른쪽으로 360° 회전하고 같은 지점으로 돌아옵니다. 각도 편차로 회전 정밀도를 측정합니다.
             </p>
             <p
               className={`mb-6 text-xs ${
                 theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
-              시작 지점을 클릭하고, 360° 회전 후 다시 같은 지점을 클릭하세요.
+              클릭으로 시작 지점을 찍고, 오른쪽으로 한 바퀴 돌아 같은 지점을 다시 클릭하세요.
             </p>
             <button
               type="button"
@@ -274,12 +274,12 @@ export default function RotationSim({
 
       {started && clickCount === 0 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded-xl backdrop-blur border border-white/20">
-              시작 지점을 바라보고 클릭하세요
+              아무 곳이나 클릭해서 시작 지점을 찍으세요
           </div>
       )}
       {started && clickCount === 1 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
-              360도 회전 후 처음 지점을 다시 클릭하세요!
+              오른쪽으로 360° 회전 후 처음 지점을 다시 클릭하세요!
               <span className="block text-xs font-normal opacity-80 mt-0.5">ESC 키로 마우스 고정 해제</span>
           </div>
       )}
