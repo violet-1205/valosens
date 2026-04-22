@@ -282,23 +282,27 @@ export default function RotationSim({
       {started && clickCount === 1 && isPointerLocked && !devInstantPreview && (
         <>
           {/* 오른쪽 방향 가이드 화살표 */}
-          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-end pr-16">
-            <div className="flex items-center gap-1" style={{ animation: 'guide-slide 1.2s ease-in-out infinite' }}>
-              {[0, 1, 2].map((i) => (
-                <svg
-                  key={i}
-                  width="32" height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ff4655"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ opacity: 0.4 + i * 0.3 }}
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              ))}
+          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-start pl-16">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-white/50 text-xs mb-2 font-semibold tracking-widest uppercase">→</span>
+              <div className="flex items-center gap-0" style={{ animation: 'guide-slide 1.0s ease-in-out infinite' }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <svg
+                    key={i}
+                    width="36" height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ff4655"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ opacity: 0.25 + i * 0.25 }}
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-white/40 text-[10px] mt-2">360°</span>
             </div>
           </div>
 
