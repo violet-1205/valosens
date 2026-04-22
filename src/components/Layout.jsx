@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setSoundVolume, getSoundVolume } from '../utils/sounds'
 import { CROSSHAIR_OPTIONS } from './Crosshair'
+import { useLanguage } from '../contexts/LanguageContext'
 
 /* ── Volume icon (changes shape by level) ─────────────────────── */
 function VolumeIcon({ volume }) {
@@ -33,6 +34,9 @@ function VolumeIcon({ volume }) {
 
 function Layout({ children, isTestPage = false }) {
   const navigate = useNavigate()
+  const { lang, t, setLang } = useLanguage()
+  const [langOpen, setLangOpen] = useState(false)
+  const langRef = useRef(null)
 
   /* ── Theme ───────────────────────────────────────────────────── */
   const [themeMode, setThemeMode] = useState(() => {
@@ -124,15 +128,16 @@ function Layout({ children, isTestPage = false }) {
   // Close popups on outside click
   const menuRef = useRef(null)
   useEffect(() => {
-    if (!volOpen && !menuOpen && !crosshairOpen) return
+    if (!volOpen && !menuOpen && !crosshairOpen && !langOpen) return
     const handler = (e) => {
       if (volRef.current && !volRef.current.contains(e.target)) setVolOpen(false)
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
       if (crosshairRef.current && !crosshairRef.current.contains(e.target)) setCrosshairOpen(false)
+      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [volOpen, menuOpen, crosshairOpen])
+  }, [volOpen, menuOpen, crosshairOpen, langOpen])
 
   /* ── Theme options ───────────────────────────────────────────── */
   const themeOptions = [
@@ -193,6 +198,44 @@ function Layout({ children, isTestPage = false }) {
           {/* Right controls */}
           <div className="flex items-center gap-0.5">
 
+            {/* ── Language Selector ─────────────────────────────── */}
+            <div className="relative" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => { setLangOpen((v) => !v); setMenuOpen(false); setVolOpen(false); setCrosshairOpen(false) }}
+                className={`h-8 px-2 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                  dark
+                    ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]'
+                    : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#DDD8D2]'
+                }`}
+              >
+                {lang.toUpperCase()}
+              </button>
+              <div
+                className={`absolute left-0 top-11 z-20 w-20 rounded-2xl border shadow-xl overflow-hidden
+                  transition-all duration-200 ease-out origin-top-left
+                  ${dark ? 'bg-[#1B2E3D] border-[#2A3D4F]' : 'bg-white border-[#DDD8D2]'}
+                  ${langOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'}`}
+              >
+                {['kr', 'en'].map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => { setLang(l); setLangOpen(false) }}
+                    className={`w-full flex items-center justify-center py-2.5 text-xs font-bold transition-colors ${
+                      lang === l
+                        ? 'text-[#FF4655]'
+                        : dark
+                        ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]/50'
+                        : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#F5F0EA]'
+                    }`}
+                  >
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* ── Crosshair Selector ───────────────────────────── */}
             <div className="relative" ref={crosshairRef}>
               <button
@@ -227,7 +270,7 @@ function Layout({ children, isTestPage = false }) {
               >
                 {/* Header */}
                 <div className={`px-4 pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-                  조준선
+                  {t.crosshairLabel}
                 </div>
 
                 {CROSSHAIR_OPTIONS.map((opt) => (
@@ -332,7 +375,7 @@ function Layout({ children, isTestPage = false }) {
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-3">
                   <span className={`text-xs font-semibold uppercase tracking-wider ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-                    효과음
+                    {t.soundLabel}
                   </span>
                   <span className={`text-xs font-bold tabular-nums ${volume === 0 ? 'text-[#768079]' : 'text-[#FF4655]'}`}>
                     {volume === 0 ? 'MUTE' : `${Math.round(volume * 100)}%`}

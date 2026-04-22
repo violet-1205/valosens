@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
+import { useLanguage } from '../contexts/LanguageContext'
 import { Canvas, useThree } from '@react-three/fiber'
 import Crosshair from './Crosshair'
 import GunViewModel from './GunViewModel'
@@ -191,6 +192,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
 
   const statsRef = useRef([])
 
+  const { t } = useLanguage()
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
   useEffect(() => {
@@ -244,16 +246,16 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
     const undershoots = statsRef.current.filter(s => s.errorType === 'undershoot').length
     const hits = statsRef.current.filter(s => s.isHit).length
     
-    let recommendation = '적절함'
-    let detail = '현재 감도가 잘 맞습니다.'
-    
-    if (totalShots > 5) { // Minimum sample size
+    let recommendation = 'good'
+    let detail = 'good'
+
+    if (totalShots > 5) {
         if (overshoots > undershoots * 1.5) {
-            recommendation = '감도 낮춤 추천'
-            detail = '타겟을 지나치는 경향(Overshoot)이 있어 감도를 조금 낮추는 것을 추천합니다.'
+            recommendation = 'lower'
+            detail = 'lower'
         } else if (undershoots > overshoots * 1.5) {
-            recommendation = '감도 높임 추천'
-            detail = '타겟에 못 미치는 경향(Undershoot)이 있어 감도를 조금 높이는 것을 추천합니다.'
+            recommendation = 'higher'
+            detail = 'higher'
         }
     }
 
@@ -296,38 +298,35 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
             }`}
           >
             <h2 className="text-3xl font-black mb-4">
-              플릭킹 테스트
+              {t.flickTitle}
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
                 theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
-              화면 곳곳에 나타나는 타겟을 빠르고 정확하게 클릭하는 능력을 측정합니다.
+              {t.flickDesc}
             </p>
             <p
               className={`mb-6 text-xs ${
                 theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
-              30초 동안 최대한 많은 타겟을 맞춰보세요.
+              {t.flickInst}
             </p>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                setScore(0)
-                setMisses(0)
-                setTimeLeft(30)
-                setStarted(true)
-                setCountdown(3)
+                setScore(0); setMisses(0); setTimeLeft(30)
+                setStarted(true); setCountdown(3)
                 statsRef.current = []
                 window.dispatchEvent(new CustomEvent('test-start'))
                 requestLock()
               }}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
-              테스트 시작
+              {t.testStart}
             </button>
           </div>
         </div>
@@ -337,7 +336,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
             <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
-              화면을 클릭하여 마우스를 고정하세요
+              {t.clickToLock}
             </p>
           </div>
         </div>
@@ -389,11 +388,11 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 rounded-xl backdrop-blur-md border border-white/10">
         {started
           ? countdown > 0
-            ? '3, 2, 1 카운트다운 이후에 타겟이 나타납니다.'
+            ? t.flickCountdown
             : isPointerLocked
-            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요. · ESC 키로 마우스 고정 해제'
-            : '화면을 클릭하여 마우스를 고정하세요.'
-          : '테스트 시작 버튼을 누르세요.'}
+            ? t.lockedHint
+            : t.unlockedHint
+          : t.pressStartHint}
       </div>
     </div>
   )

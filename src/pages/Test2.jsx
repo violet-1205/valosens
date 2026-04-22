@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import FlickingSim from '../components/FlickingSim'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function Test2() {
   const navigate = useNavigate()
@@ -41,6 +42,7 @@ function Test2() {
     navigate('/test3')
   }
 
+  const { t } = useLanguage()
   const sub = theme === 'light' ? 'text-slate-500' : 'text-slate-400'
 
   return (
@@ -58,7 +60,7 @@ function Test2() {
           <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
           }`}>
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 현황</p>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>{t.currentStatus}</p>
             <div className="flex justify-between">
               <div>
                 <p className={`text-[10px] ${sub}`}>Targets</p>
@@ -76,13 +78,13 @@ function Test2() {
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F] text-[#ECE8E1]'
           }`}>
             <p className="text-[10px] uppercase tracking-wider font-semibold text-[#ff4655] mb-1">Test 2</p>
-            <h2 className="text-lg font-black mb-2 leading-snug">코너 플릭킹</h2>
+            <h2 className="text-lg font-black mb-2 leading-snug">{t.t2Heading}</h2>
             <p className={`text-sm mb-3 leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-              좌우 코너에서 피킹하는 타겟을 빠르게 클릭하세요.
+              {t.t2Desc}
             </p>
             <ul className={`text-xs space-y-1 leading-relaxed ${sub}`}>
-              <li>· 타겟은 머리 높이 고정, 좌우 교대로 등장합니다.</li>
-              <li>· 30초 동안 오버슈트·언더슈트 경향을 분석합니다.</li>
+              <li>{t.t2Detail1}</li>
+              <li>{t.t2Detail2}</li>
             </ul>
           </div>
 
@@ -90,14 +92,14 @@ function Test2() {
           <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
           }`}>
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 감도 설정</p>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>{t.currentSensSettings}</p>
             <div className="flex justify-between">
               <div>
                 <p className={`text-[10px] ${sub}`}>DPI</p>
                 <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.dpi}</p>
               </div>
               <div>
-                <p className={`text-[10px] ${sub}`}>감도</p>
+                <p className={`text-[10px] ${sub}`}>{t.sensLabel}</p>
                 <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.valorantSens}</p>
               </div>
               <div>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playConfirm, playComplete } from '../utils/sounds'
+import { useLanguage } from '../contexts/LanguageContext'
 import { Canvas, useThree } from '@react-three/fiber'
 import Crosshair from './Crosshair'
 import GunViewModel from './GunViewModel'
@@ -110,6 +111,7 @@ export default function RotationSim({
   const cameraRef = useRef(null)
   const startYawRef = useRef(0)
 
+  const { t } = useLanguage()
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
   const modelActive = devInstantPreview ? true : started && isPointerLocked
 
@@ -224,21 +226,21 @@ export default function RotationSim({
             }`}
           >
             <h2 className="text-3xl font-black mb-4">
-              360° 회전 테스트
+              {t.rotTitle}
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
                 theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
-              아무 곳이나 클릭 후 오른쪽으로 360° 회전하고 같은 지점으로 돌아옵니다. 각도 편차로 회전 정밀도를 측정합니다.
+              {t.rotDesc}
             </p>
             <p
               className={`mb-6 text-xs ${
                 theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
-              클릭으로 시작 지점을 찍고, 오른쪽으로 한 바퀴 돌아 같은 지점을 다시 클릭하세요.
+              {t.rotInst}
             </p>
             <button
               type="button"
@@ -254,7 +256,7 @@ export default function RotationSim({
               }}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
-              테스트 시작
+              {t.testStart}
             </button>
           </div>
         </div>
@@ -264,7 +266,7 @@ export default function RotationSim({
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
             <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
-              화면을 클릭하여 마우스를 고정하세요
+              {t.clickToLock}
             </p>
           </div>
         </div>
@@ -274,13 +276,13 @@ export default function RotationSim({
 
       {started && clickCount === 0 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 text-white/90 text-sm rounded-xl backdrop-blur border border-white/20">
-              아무 곳이나 클릭해서 시작 지점을 찍으세요
+              {t.rotHint1}
           </div>
       )}
       {started && clickCount === 1 && !devInstantPreview && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
-              오른쪽으로 360° 회전 후 처음 지점을 다시 클릭하세요!
-              <span className="block text-xs font-normal opacity-80 mt-0.5">ESC 키로 마우스 고정 해제</span>
+              {t.rotHint2}
+              <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
           </div>
       )}
 

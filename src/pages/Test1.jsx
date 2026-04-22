@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import RotationSim from '../components/RotationSim'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function Test1() {
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ function Test1() {
     navigate('/test2')
   }
 
+  const { t } = useLanguage()
   const sub = theme === 'light' ? 'text-slate-500' : 'text-slate-400'
 
   return (
@@ -59,7 +61,7 @@ function Test1() {
           <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
           }`}>
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 이동량</p>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>{t.currentMovement}</p>
             <div className="flex items-baseline gap-1">
               <span className={`text-xl font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{movement.toFixed(0)}</span>
               <span className={`text-xs ${sub}`}>px</span>
@@ -71,30 +73,30 @@ function Test1() {
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F] text-[#ECE8E1]'
           }`}>
             <p className="text-[10px] uppercase tracking-wider font-semibold text-[#ff4655] mb-1">Test 1</p>
-            <h2 className="text-lg font-black mb-2 leading-snug">360° 회전 정밀도</h2>
+            <h2 className="text-lg font-black mb-2 leading-snug">{t.t1Heading}</h2>
             <p className={`text-sm mb-3 leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-              3D FPS 시점에서 360° 회전 후 원점에 정확히 돌아오는 능력을 측정합니다.
+              {t.t1Desc}
             </p>
             <ol className={`text-xs space-y-1 leading-relaxed ${sub}`}>
-              <li>1. 시작 지점을 클릭합니다.</li>
-              <li>2. 360° 회전 후 다시 같은 지점을 바라봅니다.</li>
-              <li>3. 클릭하면 편차가 측정됩니다.</li>
+              <li>{t.t1Step1}</li>
+              <li>{t.t1Step2}</li>
+              <li>{t.t1Step3}</li>
             </ol>
-            <p className="text-xs text-[#ff4655] mt-2 font-medium">정확히 돌아올수록 각도 편차가 낮아집니다.</p>
+            <p className="text-xs text-[#ff4655] mt-2 font-medium">{t.t1Tip}</p>
           </div>
 
           {/* 감도 */}
           <div className={`px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${
             theme === 'light' ? 'bg-white/95 border-[#DDD8D2]' : 'bg-[#1B2E3D]/90 border-[#2A3D4F]'
           }`}>
-            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>현재 감도 설정</p>
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-2 ${sub}`}>{t.currentSensSettings}</p>
             <div className="flex justify-between">
               <div>
                 <p className={`text-[10px] ${sub}`}>DPI</p>
                 <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.dpi}</p>
               </div>
               <div>
-                <p className={`text-[10px] ${sub}`}>감도</p>
+                <p className={`text-[10px] ${sub}`}>{t.sensLabel}</p>
                 <p className={`text-sm font-black ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>{userSetup.valorantSens}</p>
               </div>
               <div>

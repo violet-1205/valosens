@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function ValoButton({ onClick, children, type = 'button', className = '' }) {
   const [hovered, setHovered] = useState(false)
@@ -74,6 +75,7 @@ function ValoButton({ onClick, children, type = 'button', className = '' }) {
 const DPI_PRESETS = [400, 800, 1600, 3200]
 
 function SetupModal({ theme, onClose, onConfirm }) {
+  const { t } = useLanguage()
   const [dpi, setDpi] = useState(() => {
     const saved = localStorage.getItem('userSetup')
     return saved ? JSON.parse(saved).dpi : 800
@@ -123,13 +125,13 @@ function SetupModal({ theme, onClose, onConfirm }) {
   const dark = theme === 'dark'
 
   const sensLevel =
-    eDPI < 100  ? { label: '초저감도', color: 'text-slate-400' } :
-    eDPI < 184  ? { label: '저감도',   color: 'text-blue-400' } :
-    eDPI < 268  ? { label: '중저감도', color: 'text-cyan-400' } :
-    eDPI < 352  ? { label: '중감도',   color: 'text-green-400' } :
-    eDPI < 436  ? { label: '중고감도', color: 'text-yellow-400' } :
-    eDPI < 520  ? { label: '고감도',   color: 'text-orange-400' } :
-                  { label: '초고감도', color: 'text-[#FF4655]' }
+    eDPI < 100  ? { label: t.sensLevels[0], color: 'text-slate-400' } :
+    eDPI < 184  ? { label: t.sensLevels[1], color: 'text-blue-400' } :
+    eDPI < 268  ? { label: t.sensLevels[2], color: 'text-cyan-400' } :
+    eDPI < 352  ? { label: t.sensLevels[3], color: 'text-green-400' } :
+    eDPI < 436  ? { label: t.sensLevels[4], color: 'text-yellow-400' } :
+    eDPI < 520  ? { label: t.sensLevels[5], color: 'text-orange-400' } :
+                  { label: t.sensLevels[6], color: 'text-[#FF4655]' }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
@@ -138,9 +140,9 @@ function SetupModal({ theme, onClose, onConfirm }) {
       }`}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold">현재 사용 중인 감도를 입력해 주세요</h2>
+            <h2 className="text-xl font-bold">{t.setupTitle}</h2>
             <p className={`text-sm mt-0.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-              발로란트 인게임 설정 그대로 입력해 주세요
+              {t.setupDesc}
             </p>
           </div>
           <button
@@ -157,7 +159,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
         {/* DPI */}
         <div className="mb-5">
           <label className={`block text-xs font-semibold uppercase tracking-widest mb-2.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-            마우스 DPI
+            {t.mouseDPI}
           </label>
           <div className="flex gap-2 mb-2.5">
             {DPI_PRESETS.map((preset) => (
@@ -186,7 +188,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
                 ? 'bg-[#0F1923] border-[#2A3D4F] text-[#ECE8E1] placeholder-[#768079]'
                 : 'bg-[#F5F0EA] border-[#DDD8D2] text-[#1A1F2E] placeholder-[#7A7E85]'
             }`}
-            placeholder="직접 입력"
+            placeholder={t.customInput}
             min="100"
             max="32000"
           />
@@ -195,7 +197,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
         {/* Sensitivity */}
         <div className="mb-6">
           <label className={`block text-xs font-semibold uppercase tracking-widest mb-2.5 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-            인게임 감도
+            {t.inGameSens}
           </label>
           <div className="flex items-center gap-2">
             <button
@@ -252,7 +254,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
           </div>
           <div className={`w-px ${dark ? 'bg-[#2A3D4F]' : 'bg-[#DDD8D2]'}`} />
           <div className="text-center">
-            <p className={`text-xs mb-1 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>수준</p>
+            <p className={`text-xs mb-1 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>{t.level}</p>
             <p className={`text-base font-bold ${sensLevel.color}`}>{sensLevel.label}</p>
           </div>
         </div>
@@ -260,7 +262,7 @@ function SetupModal({ theme, onClose, onConfirm }) {
         {/* Confirm */}
         <div className="flex justify-center mt-2">
           <ValoButton onClick={() => onConfirm({ dpi, valorantSens: validSens, eDPI })}>
-            테스트 시작하기
+            {t.startTestBtn}
           </ValoButton>
         </div>
       </div>
@@ -268,51 +270,28 @@ function SetupModal({ theme, onClose, onConfirm }) {
   )
 }
 
-const tests = [
-  {
-    num: '01',
-    title: '360° 회전 정밀도',
-    desc: '아무 곳이나 클릭 후 오른쪽으로 360° 회전하고 같은 지점으로 돌아옵니다. 각도 편차로 회전 정밀도를 측정합니다.',
-    tag: '회전 제어',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 11a8 8 0 0 1 12.5-6.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 4.5H21v4.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20 13a8 8 0 0 1-12.5 6.5" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 19.5H3V15" />
-      </svg>
-    ),
-  },
-  {
-    num: '02',
-    title: '코너 플릭킹',
-    desc: '좌우로 튀어나오는 적을 빠르게 플릭합니다. 오버슈트/언더슈트 경향을 분석합니다.',
-    tag: '플릭 에임',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="2" />
-        <path strokeLinecap="round" d="M12 4v3M12 17v3M4 12h3M17 12h3" />
-      </svg>
-    ),
-  },
-  {
-    num: '03',
-    title: '정지 타겟 탭샷',
-    desc: '1.5초 제한으로 20개 타겟을 클릭합니다. 탭샷 정확도와 반응속도를 동시에 측정합니다.',
-    tag: '탭샷 속도',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="3" />
-        <path strokeLinecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-        <path strokeLinecap="round" d="M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
-      </svg>
-    ),
-  },
+const TEST_ICONS = [
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 11a8 8 0 0 1 12.5-6.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 4.5H21v4.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20 13a8 8 0 0 1-12.5 6.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 19.5H3V15" />
+  </svg>,
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="2" />
+    <path strokeLinecap="round" d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+  </svg>,
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+    <circle cx="12" cy="12" r="3" />
+    <path strokeLinecap="round" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+    <path strokeLinecap="round" d="M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
+  </svg>,
 ]
 
 function Home() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [showSetup, setShowSetup] = useState(false)
   const [themeMode, setThemeMode] = useState(() => {
     return localStorage.getItem('themeMode') || 'system'
@@ -361,30 +340,29 @@ function Home() {
             }
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#FF4655] animate-pulse" />
-            발로란트 감도 측정 도구
+            {t.badge}
           </div>
 
           {/* Title */}
           <h1 className={`text-4xl md:text-5xl font-black leading-[1.15] mb-5 tracking-tight ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
-            지금 감도가<br />
-            <span className="text-[#FF4655]">진짜 맞는지</span><br />
-            확인해 보세요
+            {t.heroLine1}<br />
+            <span className="text-[#FF4655]">{t.heroLine2}</span><br />
+            {t.heroLine3}
           </h1>
 
           <p className={`text-base md:text-lg leading-relaxed mb-8 max-w-lg mx-auto ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-            회전 정밀도, 플릭, 탭샷 — 3가지 테스트로
-            지금 감도가 내 플레이 스타일에 맞는지 숫자로 확인해 보세요.
+            {t.heroSubtitle}
           </p>
 
           {/* CTA */}
           <div className="flex flex-col items-center gap-3">
             <div className="flex flex-col sm:flex-row items-center gap-3">
               <ValoButton onClick={() => setShowSetup(true)}>
-                테스트 시작하기
+                {t.startTestBtn}
               </ValoButton>
             </div>
             <span className={`text-sm ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-              무료 · 3분 소요
+              {t.freeDuration}
             </span>
           </div>
         </div>
@@ -399,17 +377,21 @@ function Home() {
       <section className="max-w-6xl mx-auto px-5 py-16">
         <div className="mb-10 text-center">
           <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-            테스트 구성
+            {t.testsLabel}
           </p>
           <h2 className={`text-2xl font-bold ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
-            총 3단계로 측정합니다
+            {t.testsHeading}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {tests.map((t, i) => (
+          {[
+            { num: '01', title: t.test1Title, desc: t.test1Desc, tag: t.test1Tag },
+            { num: '02', title: t.test2Title, desc: t.test2Desc, tag: t.test2Tag },
+            { num: '03', title: t.test3Title, desc: t.test3Desc, tag: t.test3Tag },
+          ].map((card, i) => (
             <div
-              key={t.num}
+              key={card.num}
               className={`rounded-3xl border p-6 transition-all duration-300 hover:-translate-y-1 ${
                 dark
                   ? 'bg-[#1B2E3D] border-[#2A3D4F] hover:border-[#FF4655]/30 hover:shadow-xl hover:shadow-[#FF4655]/5'
@@ -417,30 +399,19 @@ function Home() {
               }`}
               style={{ animationDelay: `${i * 0.1}s` }}
             >
-              {/* Number + Icon */}
               <div className="flex items-start justify-between mb-5">
-                <span className="text-4xl font-black text-[#FF4655]/20 leading-none select-none">{t.num}</span>
+                <span className="text-4xl font-black text-[#FF4655]/20 leading-none select-none">{card.num}</span>
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
                   dark ? 'bg-[#FF4655]/10 text-[#FF4655]' : 'bg-[#FF4655]/8 text-[#FF4655]'
                 }`}>
-                  {t.icon}
+                  {TEST_ICONS[i]}
                 </div>
               </div>
-
-              <h3 className={`text-base font-bold mb-2 ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
-                {t.title}
-              </h3>
-              <p className={`text-sm leading-relaxed mb-4 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-                {t.desc}
-              </p>
-
+              <h3 className={`text-base font-bold mb-2 ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>{card.title}</h3>
+              <p className={`text-sm leading-relaxed mb-4 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>{card.desc}</p>
               <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                dark
-                  ? 'bg-[#2A3D4F] text-[#768079]'
-                  : 'bg-[#F5F0EA] text-[#7A7E85]'
-              }`}>
-                {t.tag}
-              </span>
+                dark ? 'bg-[#2A3D4F] text-[#768079]' : 'bg-[#F5F0EA] text-[#7A7E85]'
+              }`}>{card.tag}</span>
             </div>
           ))}
         </div>
@@ -451,13 +422,13 @@ function Home() {
         dark ? 'bg-[#1B2E3D]' : 'bg-white border border-[#DDD8D2]'
       }`}>
         <h2 className={`text-xl font-bold mb-2 ${dark ? 'text-[#ECE8E1]' : 'text-[#1A1F2E]'}`}>
-          지금 바로 시작해 보세요
+          {t.ctaHeading}
         </h2>
         <p className={`text-sm mb-6 ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
-          DPI와 인게임 감도만 있으면 바로 시작하실 수 있습니다
+          {t.ctaDesc}
         </p>
         <ValoButton onClick={() => setShowSetup(true)}>
-          감도 테스트 시작
+          {t.ctaBtn}
         </ValoButton>
       </section>
     </Layout>

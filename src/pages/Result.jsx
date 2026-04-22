@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function Result() {
   const navigate = useNavigate()
@@ -61,8 +62,8 @@ function Result() {
     let adjustedSens = currentValorantSens
 
     if (deviationDeg > 30) adjustedSens *= 0.92
-    if (flickRecommendation === '감도 낮춤 추천') adjustedSens *= 0.90
-    else if (flickRecommendation === '감도 높임 추천') adjustedSens *= 1.10
+    if (flickRecommendation === 'lower') adjustedSens *= 0.90
+    else if (flickRecommendation === 'higher') adjustedSens *= 1.10
     if (flickAccuracy > 80) adjustedSens *= 1.02
     else if (flickAccuracy < 50) adjustedSens *= 0.95
     if (tappingAccuracy > 75 && avgReactionTime < 500) adjustedSens *= 1.03
@@ -86,9 +87,6 @@ function Result() {
   const test2Misses = allData.test2?.misses ?? 0
   const test2DiffRaw = test2Score - test2Misses
   const test2Diff = Math.max(0, Math.min(100, test2DiffRaw))
-  let test2Level = '하'
-  if (test2Diff >= 60) test2Level = '상'
-  else if (test2Diff >= 30) test2Level = '중'
 
   const handleRestart = () => {
     localStorage.removeItem('test1Data')
@@ -98,6 +96,17 @@ function Result() {
     localStorage.removeItem('userSensitivity')
     navigate('/')
   }
+
+  const { t } = useLanguage()
+
+  const recDisplay = (key) =>
+    key === 'lower' ? t.recLower : key === 'higher' ? t.recHigher : t.recGood
+  const recDetailDisplay = (key) =>
+    key === 'lower' ? t.recLowerDetail : key === 'higher' ? t.recHigherDetail : t.recGoodDetail
+
+  const test2Level =
+    test2Diff >= 60 ? t.levelLabels.high :
+    test2Diff >= 30 ? t.levelLabels.mid  : t.levelLabels.low
 
   const card = dark
     ? 'bg-[#1B2E3D] border-[#2A3D4F]'
@@ -119,26 +128,26 @@ function Result() {
               }
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF4655]" />
-              테스트 완료
+              {t.resultBadge}
             </div>
             <h1 className={`text-3xl md:text-4xl font-black mb-2 ${text}`}>
-              결과 리포트
+              {t.resultHeading}
             </h1>
             <p className={`text-sm ${muted}`}>
-              세 가지 테스트 데이터를 종합해서 현재 감도와 플레이 스타일의 궁합을 정리했습니다.
+              {t.resultDesc}
             </p>
           </div>
 
           {/* 현재 감도 배너 */}
           <div className={`rounded-2xl border px-6 py-4 mb-6 flex items-center justify-between flex-wrap gap-4 ${card}`}>
-            <span className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>테스트 감도</span>
+            <span className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>{t.testSensLabel}</span>
             <div className="flex gap-6">
               <div className="text-center">
                 <p className={`text-xs mb-0.5 ${muted}`}>DPI</p>
                 <p className={`text-lg font-black ${text}`}>{userSetup.dpi}</p>
               </div>
               <div className="text-center">
-                <p className={`text-xs mb-0.5 ${muted}`}>발로란트 감도</p>
+                <p className={`text-xs mb-0.5 ${muted}`}>{t.valoSensLabel}</p>
                 <p className={`text-lg font-black ${text}`}>{userSetup.valorantSens}</p>
               </div>
               <div className="text-center">
@@ -160,7 +169,7 @@ function Result() {
                 {allData.test1?.avgMovement?.toFixed(0) || 0}
                 <span className={`text-sm font-normal ml-1 ${muted}`}>px</span>
               </p>
-              <p className={`text-xs mb-2 ${muted}`}>360° 회전 시 마우스 이동량</p>
+              <p className={`text-xs mb-2 ${muted}`}>{t.rotMetric}</p>
               {allData.test1?.deviationDeg !== undefined && (
                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
                   allData.test1.deviationDeg <= 10
@@ -169,7 +178,7 @@ function Result() {
                     ? 'bg-yellow-500/15 text-yellow-500'
                     : 'bg-[#FF4655]/15 text-[#FF4655]'
                 }`}>
-                  각도 편차 {allData.test1.deviationDeg}°
+                  {t.deviationBadge(allData.test1.deviationDeg)}
                 </span>
               )}
             </div>
@@ -181,17 +190,17 @@ function Result() {
               </p>
               <p className={`text-4xl font-black mb-1 ${text}`}>{test2Level}</p>
               <p className={`text-xs mb-2 ${muted}`}>
-                Hit {test2Score} · Miss {test2Misses} · 순점수 {test2Diff}
+                {t.netScore(test2Score, test2Misses, test2Diff)}
               </p>
               {allData.test2?.recommendation && (
                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  allData.test2.recommendation.includes('낮춤')
+                  allData.test2.recommendation === 'lower'
                     ? 'bg-blue-500/15 text-blue-400'
-                    : allData.test2.recommendation.includes('높임')
+                    : allData.test2.recommendation === 'higher'
                     ? 'bg-[#FF4655]/15 text-[#FF4655]'
                     : 'bg-green-500/15 text-green-500'
                 }`}>
-                  {allData.test2.recommendation}
+                  {recDisplay(allData.test2.recommendation)}
                 </span>
               )}
             </div>
@@ -206,7 +215,7 @@ function Result() {
                 <span className={`text-sm font-normal ml-1 ${muted}`}>%</span>
               </p>
               <p className={`text-xs mb-2 ${muted}`}>
-                정지 타겟 탭샷 정확도 ({allData.test3?.hits || 0} / {allData.test3?.total || 20})
+                {t.tapAccuracy(allData.test3?.hits || 0, allData.test3?.total || 20)}
               </p>
               {allData.test3?.avgReactionTime > 0 && (
                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -216,17 +225,17 @@ function Result() {
                     ? 'bg-yellow-500/15 text-yellow-500'
                     : 'bg-[#FF4655]/15 text-[#FF4655]'
                 }`}>
-                  평균 반응속도 {allData.test3.avgReactionTime}ms
+                  {t.avgReaction(allData.test3.avgReactionTime)}
                 </span>
               )}
             </div>
           </div>
 
           {/* 플릭킹 분석 디테일 */}
-          {allData.test2?.detail && (
+          {allData.test2?.recommendation && (
             <div className={`rounded-2xl border px-5 py-4 mb-6 text-sm ${card}`}>
-              <span className={`font-bold mr-2 ${text}`}>플릭킹 정밀 분석:</span>
-              <span className={muted}>{allData.test2.detail}</span>
+              <span className={`font-bold mr-2 ${text}`}>{t.flickAnalysis}</span>
+              <span className={muted}>{recDetailDisplay(allData.test2.recommendation)}</span>
             </div>
           )}
 
@@ -234,7 +243,7 @@ function Result() {
           {recommendedSens && (
             <div className={`rounded-3xl border p-8 ${card}`}>
               <h2 className={`text-xl font-bold mb-6 text-center ${text}`}>
-                감도 추천
+                {t.sensRecommend}
               </h2>
 
               {/* 현재 vs 추천 */}
@@ -242,7 +251,7 @@ function Result() {
                 {/* 현재 */}
                 <div className={`rounded-2xl p-5 ${dark ? 'bg-[#0F1923]' : 'bg-[#F5F0EA]'}`}>
                   <p className={`text-xs font-semibold uppercase tracking-widest mb-4 ${muted}`}>
-                    현재 감도
+                    {t.currentSensCard}
                   </p>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
@@ -250,7 +259,7 @@ function Result() {
                       <span className={`font-bold ${text}`}>{recommendedSens.dpi}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`text-xs ${muted}`}>감도</span>
+                      <span className={`text-xs ${muted}`}>{t.sensLabel}</span>
                       <span className={`font-bold text-lg ${text}`}>{recommendedSens.currentSens}</span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -263,7 +272,7 @@ function Result() {
                 {/* 추천 */}
                 <div className="rounded-2xl p-5 border-2 border-[#FF4655] relative" style={dark ? { background: 'rgba(255,70,85,0.05)' } : { background: 'rgba(255,70,85,0.04)' }}>
                   <p className="text-xs font-semibold uppercase tracking-widest mb-4 text-[#FF4655]">
-                    추천 감도
+                    {t.recommendedSensCard}
                   </p>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
@@ -271,7 +280,7 @@ function Result() {
                       <span className={`font-bold ${text}`}>{recommendedSens.dpi}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`text-xs ${muted}`}>감도</span>
+                      <span className={`text-xs ${muted}`}>{t.sensLabel}</span>
                       <span className="font-black text-2xl text-[#FF4655]">{recommendedSens.valorantSens}</span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -298,15 +307,15 @@ function Result() {
                   : dark ? 'bg-[#FF4655]/10 text-[#FF4655]' : 'bg-red-50 text-red-700'
               }`}>
                 {parseFloat(recommendedSens.delta) === 0
-                  ? '현재 감도가 테스트 결과와 잘 맞습니다.'
+                  ? t.deltaGood
                   : parseFloat(recommendedSens.delta) < 0
-                  ? `감도를 ${Math.abs(parseFloat(recommendedSens.delta)).toFixed(2)} 낮추세요. 오버슈트 또는 제어 불안정 경향이 있습니다.`
-                  : `감도를 ${parseFloat(recommendedSens.delta).toFixed(2)} 높이세요. 언더슈트 또는 반응 여유가 있습니다.`
+                  ? t.deltaLower(Math.abs(parseFloat(recommendedSens.delta)).toFixed(2))
+                  : t.deltaHigher(parseFloat(recommendedSens.delta).toFixed(2))
                 }
               </div>
 
               <p className={`text-xs text-center mb-6 ${muted}`}>
-                현재 테스트 데이터 기준 추정값입니다. 실제 게임에서 몇 판 플레이하며 미세 조정해 보세요.
+                {t.disclaimer}
               </p>
 
               <div className={`pt-6 border-t flex justify-center ${dark ? 'border-[#2A3D4F]' : 'border-[#DDD8D2]'}`}>
@@ -318,7 +327,7 @@ function Result() {
                       : 'bg-[#1A1F2E] text-white hover:bg-[#1A1F2E]/90'
                   }`}
                 >
-                  처음부터 다시 테스트하기
+                  {t.restart}
                 </button>
               </div>
             </div>

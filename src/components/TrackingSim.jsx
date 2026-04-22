@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playHit, playMiss } from '../utils/sounds'
+import { useLanguage } from '../contexts/LanguageContext'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import Crosshair from './Crosshair'
 import GunViewModel from './GunViewModel'
@@ -117,6 +118,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
   const reactionTimesRef = useRef([])
   const firstSpawnDoneRef = useRef(false)
 
+  const { t } = useLanguage()
   const bg = theme === 'dark' ? 'bg-[#0F1923]' : 'bg-[#f5f0ea]'
 
   useEffect(() => {
@@ -228,22 +230,22 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
             }`}
           >
             <h2 className="text-3xl font-black mb-4">
-              탭샷 테스트
+              {t.tapTitle}
             </h2>
             <p
               className={`mb-6 leading-relaxed ${
                 theme === 'light' ? 'text-[#1A1F2E]/70' : 'text-[#ECE8E1]/70'
               }`}
             >
-              나타나는 정지 타겟을 빠르게 조준하여 클릭하세요.
-              각 타겟은 <span className="text-[#ff4655] font-bold">0.5초</span> 후 사라집니다.
+              {t.tapDesc}
+              {' '}<span className="text-[#ff4655] font-bold">{t.tapTimeHighlight}</span> 후 사라집니다.
             </p>
             <p
               className={`mb-6 text-xs ${
                 theme === 'light' ? 'text-[#7A7E85]' : 'text-[#768079]'
               }`}
             >
-              총 {TOTAL_TARGETS}개의 타겟 · 발로란트의 멈추고 쏘는 에임 방식을 시뮬레이션합니다.
+              {t.tapInfo(TOTAL_TARGETS)}
             </p>
             <button
               type="button"
@@ -263,7 +265,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
               }}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
-              테스트 시작
+              {t.testStart}
             </button>
           </div>
         </div>
@@ -274,7 +276,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
         <div className="absolute inset-0 z-[25] pointer-events-none flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
           <div className="text-center animate-bounce">
             <p className="text-white text-xl font-bold bg-[#ff4655] px-6 py-3 rounded-2xl shadow-2xl">
-              화면을 클릭하여 마우스를 고정하세요
+              {t.clickToLock}
             </p>
           </div>
         </div>
@@ -331,11 +333,11 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/50 text-sm text-center bg-black/40 px-6 py-2 rounded-xl backdrop-blur-md border border-white/10">
         {started
           ? countdown > 0
-            ? '3, 2, 1 카운트다운 후 타겟이 나타납니다.'
+            ? t.tapCountdown
             : isPointerLocked
-            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요. · ESC 키로 마우스 고정 해제'
-            : '화면을 클릭하여 마우스를 고정하세요.'
-          : '테스트 시작 버튼을 누르세요.'}
+            ? t.lockedHint
+            : t.unlockedHint
+          : t.pressStartHint}
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { LanguageProvider } from './contexts/LanguageContext'
 import Home from './pages/Home'
 import Test1 from './pages/Test1'
 import Test2 from './pages/Test2'
@@ -8,6 +9,7 @@ import DevTest1 from './pages/DevTest1'
 
 function App() {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -18,6 +20,7 @@ function App() {
         <Route path="/result" element={<Result />} />
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
   )
 }
 
