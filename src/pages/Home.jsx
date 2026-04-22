@@ -20,7 +20,7 @@ function ValoButton({ onClick, children, type = 'button', className = '' }) {
         color: hovered ? '#ece8e1' : '#ff4655',
         textTransform: 'uppercase',
         textDecoration: 'none',
-        boxShadow: '0 0 0 1px inset rgba(236,232,225,0.3)',
+        boxShadow: 'none',
         borderRadius: '14px',
         background: 'transparent',
         border: 'none',
