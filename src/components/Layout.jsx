@@ -56,6 +56,49 @@ function Layout({ children, isTestPage = false }) {
   const theme = resolveTheme(themeMode)
   const dark = theme === 'dark'
 
+  /* ── Test fullscreen ─────────────────────────────────────────── */
+  const [testActive, setTestActive] = useState(false)
+  const [pointerLocked, setPointerLocked] = useState(false)
+  const [mouseNearTop, setMouseNearTop] = useState(false)
+  const [mouseNearBottom, setMouseNearBottom] = useState(false)
+
+  useEffect(() => {
+    const onStart = () => setTestActive(true)
+    const onEnd = () => { setTestActive(false); setPointerLocked(false) }
+    window.addEventListener('test-start', onStart)
+    window.addEventListener('test-end', onEnd)
+    return () => {
+      window.removeEventListener('test-start', onStart)
+      window.removeEventListener('test-end', onEnd)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isTestPage) return
+    const handler = () => setPointerLocked(!!document.pointerLockElement)
+    document.addEventListener('pointerlockchange', handler)
+    return () => document.removeEventListener('pointerlockchange', handler)
+  }, [isTestPage])
+
+  useEffect(() => {
+    if (!testActive || pointerLocked) {
+      setMouseNearTop(false)
+      setMouseNearBottom(false)
+      return
+    }
+    const EDGE = 72
+    const handler = (e) => {
+      setMouseNearTop(e.clientY < EDGE)
+      setMouseNearBottom(e.clientY > window.innerHeight - EDGE)
+    }
+    window.addEventListener('mousemove', handler)
+    return () => window.removeEventListener('mousemove', handler)
+  }, [testActive, pointerLocked])
+
+  const uiHidden = isTestPage && testActive && pointerLocked
+  const showHeader = !uiHidden || mouseNearTop
+  const showFooter = !uiHidden || mouseNearBottom
+
   /* ── Volume ──────────────────────────────────────────────────── */
   const [volume, setVolumeState] = useState(() => getSoundVolume())
   const [volOpen, setVolOpen] = useState(false)
@@ -127,7 +170,11 @@ function Layout({ children, isTestPage = false }) {
 
   return (
     <div className={`min-h-screen flex flex-col ${dark ? 'bg-[#0F1923] text-[#ECE8E1]' : 'bg-[#F5F0EA] text-[#1A1F2E]'}`}>
-      {/* Navbar */}
+      {/* Navbar wrapper — collapses upward during test */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: showHeader ? '64px' : '0px' }}
+      >
       <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${dark ? 'bg-[#0F1923]/90 border-[#2A3D4F]' : 'bg-[#F5F0EA]/90 border-[#DDD8D2]'}`}>
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
 
@@ -354,6 +401,7 @@ function Layout({ children, isTestPage = false }) {
           </div>
         </div>
       </header>
+      </div>
 
       {/* Main */}
       <main className="flex-1 w-full flex flex-col">
@@ -364,7 +412,11 @@ function Layout({ children, isTestPage = false }) {
         )}
       </main>
 
-      {/* Footer */}
+      {/* Footer wrapper — collapses downward during test */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: showFooter ? '56px' : '0px' }}
+      >
       <footer className={`border-t ${dark ? 'border-[#2A3D4F]' : 'border-[#DDD8D2]'}`}>
         <div className="max-w-6xl mx-auto px-5 h-12 flex items-center justify-center">
           <span className={`text-xs ${dark ? 'text-[#768079]' : 'text-[#7A7E85]'}`}>
@@ -372,6 +424,7 @@ function Layout({ children, isTestPage = false }) {
           </span>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

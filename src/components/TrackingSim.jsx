@@ -194,6 +194,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
   useEffect(() => {
     if (!started || currentIndex < TOTAL_TARGETS) return
     if (document.pointerLockElement) document.exitPointerLock()
+    window.dispatchEvent(new CustomEvent('test-end'))
     const accuracy = Math.round((hitsRef.current / TOTAL_TARGETS) * 100)
     const avgReactionTime =
       reactionTimesRef.current.length > 0
@@ -257,6 +258,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
                 setTargetKey(0)
                 setStarted(true)
                 setCountdown(3)
+                window.dispatchEvent(new CustomEvent('test-start'))
                 requestLock()
               }}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
@@ -331,7 +333,7 @@ export default function TrackingSim({ onComplete, sensitivity, theme = 'dark', o
           ? countdown > 0
             ? '3, 2, 1 카운트다운 후 타겟이 나타납니다.'
             : isPointerLocked
-            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요.'
+            ? '마우스가 고정되었습니다. 조준하여 타겟을 클릭하세요. · ESC 키로 마우스 고정 해제'
             : '화면을 클릭하여 마우스를 고정하세요.'
           : '테스트 시작 버튼을 누르세요.'}
       </div>

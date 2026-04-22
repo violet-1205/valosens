@@ -195,6 +195,7 @@ export default function RotationSim({
         if (document.pointerLockElement) {
             document.exitPointerLock()
         }
+        window.dispatchEvent(new CustomEvent('test-end'))
         setStarted(false)
         const camera = cameraRef.current
         let deviationDeg = 0
@@ -248,6 +249,7 @@ export default function RotationSim({
                 setMarkers([])
                 setHasFirstClick(false)
                 setStarted(true)
+                window.dispatchEvent(new CustomEvent('test-start'))
                 requestLock()
               }}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
@@ -276,8 +278,9 @@ export default function RotationSim({
           </div>
       )}
       {started && clickCount === 1 && !devInstantPreview && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse">
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
               360도 회전 후 처음 지점을 다시 클릭하세요!
+              <span className="block text-xs font-normal opacity-80 mt-0.5">ESC 키로 마우스 고정 해제</span>
           </div>
       )}
 
