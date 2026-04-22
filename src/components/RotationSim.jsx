@@ -25,42 +25,19 @@ function CuteMarker({ pos }) {
 }
 
 function RotationGuide() {
-  const RADIUS = 5
-  const COUNT = 10
-  const coneRefs = useRef([])
+  const ringRef = useRef()
 
   useFrame((state) => {
-    const pulse = (Math.sin(state.clock.elapsedTime * 2.5) + 1) / 2
-    coneRefs.current.forEach((ref) => {
-      if (ref) ref.material.opacity = 0.4 + pulse * 0.5
-    })
+    if (ringRef.current) {
+      ringRef.current.material.opacity = 0.15 + (Math.sin(state.clock.elapsedTime * 3) + 1) / 2 * 0.55
+    }
   })
 
   return (
-    <group>
-      {/* 수평 링 */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[RADIUS, 0.022, 8, 100]} />
-        <meshBasicMaterial color="#ff4655" transparent opacity={0.25} depthWrite={false} />
-      </mesh>
-      {/* 방향 화살표 콘 */}
-      {Array.from({ length: COUNT }, (_, i) => {
-        const angle = (i / COUNT) * Math.PI * 2
-        const x = Math.sin(angle) * RADIUS
-        const z = Math.cos(angle) * RADIUS
-        return (
-          <mesh
-            key={i}
-            ref={(el) => (coneRefs.current[i] = el)}
-            position={[x, 0, z]}
-            rotation={[Math.PI / 2, angle + Math.PI / 2, 0]}
-          >
-            <coneGeometry args={[0.09, 0.3, 8]} />
-            <meshBasicMaterial color="#ff4655" transparent opacity={0.7} depthWrite={false} />
-          </mesh>
-        )
-      })}
-    </group>
+    <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
+      <torusGeometry args={[5, 0.03, 8, 100]} />
+      <meshBasicMaterial color="#ff4655" transparent opacity={0.3} depthWrite={false} />
+    </mesh>
   )
 }
 
