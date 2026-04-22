@@ -203,13 +203,17 @@ function Layout({ children, isTestPage = false }) {
               <button
                 type="button"
                 onClick={() => { setLangOpen((v) => !v); setMenuOpen(false); setVolOpen(false); setCrosshairOpen(false) }}
-                className={`h-8 px-2 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                   dark
                     ? 'text-[#768079] hover:text-[#ECE8E1] hover:bg-[#2A3D4F]'
                     : 'text-[#7A7E85] hover:text-[#1A1F2E] hover:bg-[#DDD8D2]'
                 }`}
               >
-                {lang.toUpperCase()}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
               </button>
               <div
                 className={`absolute left-0 top-11 z-20 w-20 rounded-2xl border shadow-xl overflow-hidden
