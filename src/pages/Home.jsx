@@ -29,10 +29,6 @@ function ValoButton({ onClick, children, type = 'button', className = '' }) {
         transition: 'color 0.3s ease-out',
       }}
     >
-      {/* Left cut */}
-      <span style={{ position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:1, height:8, background:'#0f1923', zIndex:10 }} />
-      {/* Right cut */}
-      <span style={{ position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', width:1, height:8, background:'#0f1923', zIndex:10 }} />
 
       <span style={{ position:'relative', width:'100%', height:'100%', display:'block', overflow:'hidden', borderRadius:'14px' }}>
         {/* Corner border (span.base) */}
