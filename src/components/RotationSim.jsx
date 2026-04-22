@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import { playConfirm, playComplete } from '../utils/sounds'
 import { useLanguage } from '../contexts/LanguageContext'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import Crosshair from './Crosshair'
 import GunViewModel from './GunViewModel'
 import { PerspectiveCamera } from '@react-three/drei'
@@ -21,6 +21,46 @@ function CuteMarker({ pos }) {
         metalness={0.0}
       />
     </mesh>
+  )
+}
+
+function RotationGuide() {
+  const RADIUS = 5
+  const COUNT = 10
+  const coneRefs = useRef([])
+
+  useFrame((state) => {
+    const pulse = (Math.sin(state.clock.elapsedTime * 2.5) + 1) / 2
+    coneRefs.current.forEach((ref) => {
+      if (ref) ref.material.opacity = 0.4 + pulse * 0.5
+    })
+  })
+
+  return (
+    <group>
+      {/* 수평 링 */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[RADIUS, 0.022, 8, 100]} />
+        <meshBasicMaterial color="#ff4655" transparent opacity={0.25} depthWrite={false} />
+      </mesh>
+      {/* 방향 화살표 콘 */}
+      {Array.from({ length: COUNT }, (_, i) => {
+        const angle = (i / COUNT) * Math.PI * 2
+        const x = Math.sin(angle) * RADIUS
+        const z = Math.cos(angle) * RADIUS
+        return (
+          <mesh
+            key={i}
+            ref={(el) => (coneRefs.current[i] = el)}
+            position={[x, 0, z]}
+            rotation={[Math.PI / 2, angle + Math.PI / 2, 0]}
+          >
+            <coneGeometry args={[0.09, 0.3, 8]} />
+            <meshBasicMaterial color="#ff4655" transparent opacity={0.7} depthWrite={false} />
+          </mesh>
+        )
+      })}
+    </group>
   )
 }
 
@@ -51,7 +91,7 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
   return null
 }
 
-function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme = 'dark' }) {
+function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, showGuide = false, theme = 'dark' }) {
   const { camera, raycaster, scene } = useThree()
 
   useEffect(() => {
@@ -85,6 +125,7 @@ function Scene({ sensitivity, markers = [], onCameraReady, onSphereClick, theme 
       <ambientLight intensity={0.7} />
       <hemisphereLight args={['#e8f4ff', '#c8dcc8', 1.0]} />
       <directionalLight position={[5, 10, 5]} intensity={1.6} />
+      {showGuide && <RotationGuide />}
       {markers.map((pos, index) => (
         <CuteMarker key={index} pos={pos} index={index} />
       ))}
@@ -279,45 +320,11 @@ export default function RotationSim({
               {t.rotHint1}
           </div>
       )}
-      {started && clickCount === 1 && isPointerLocked && !devInstantPreview && (
-        <>
-          {/* 오른쪽 방향 가이드 화살표 */}
-          <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center" style={{ paddingLeft: '60px' }}>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-white/50 text-xs mb-2 font-semibold tracking-widest uppercase">→</span>
-              <div className="flex items-center gap-0" style={{ animation: 'guide-slide 1.0s ease-in-out infinite' }}>
-                {[0, 1, 2, 3].map((i) => (
-                  <svg
-                    key={i}
-                    width="36" height="36"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#ff4655"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ opacity: 0.25 + i * 0.25 }}
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-white/40 text-[10px] mt-2">360°</span>
-            </div>
-          </div>
-
-          {/* 하단 힌트 */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
-            {t.rotHint2}
-            <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
-          </div>
-        </>
-      )}
-      {started && clickCount === 1 && !isPointerLocked && !devInstantPreview && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
-              {t.rotHint2}
-              <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
-          </div>
+      {started && clickCount === 1 && !devInstantPreview && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-[#ff4655]/80 text-white font-bold text-sm rounded-xl backdrop-blur shadow-lg animate-pulse text-center">
+          {t.rotHint2}
+          <span className="block text-xs font-normal opacity-80 mt-0.5">{t.rotEsc}</span>
+        </div>
       )}
 
       {devInstantPreview && (
@@ -363,6 +370,7 @@ export default function RotationSim({
             <Scene
               sensitivity={sensitivity}
               markers={markers}
+              showGuide={clickCount === 1}
               onCameraReady={(camera) => {
                 cameraRef.current = camera
                 if (devInstantPreview) {
