@@ -172,8 +172,13 @@ function Layout({ children, isTestPage = false }) {
     <div className={`min-h-screen flex flex-col ${dark ? 'bg-[#0F1923] text-[#ECE8E1]' : 'bg-[#F5F0EA] text-[#1A1F2E]'}`}>
       {/* Navbar wrapper — collapses upward during test */}
       <div
-        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style={{ maxHeight: showHeader ? '64px' : '0px' }}
+        className="transition-[max-height,opacity] duration-300 ease-in-out"
+        style={{
+          maxHeight: showHeader ? '64px' : '0px',
+          opacity: showHeader ? 1 : 0,
+          overflow: showHeader ? 'visible' : 'hidden',
+          pointerEvents: showHeader ? 'auto' : 'none',
+        }}
       >
       <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${dark ? 'bg-[#0F1923]/90 border-[#2A3D4F]' : 'bg-[#F5F0EA]/90 border-[#DDD8D2]'}`}>
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
