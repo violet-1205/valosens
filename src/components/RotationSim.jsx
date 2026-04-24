@@ -49,7 +49,7 @@ function PlayerController({ sensitivityMultiplier = 1 }) {
     (e) => {
       if (!document.pointerLockElement) return
       const { movementX, movementY } = e
-      const baseSensitivity = 0.002
+      const baseSensitivity = 0.07 * Math.PI / 180
       const finalSensitivity = baseSensitivity * sensitivityMultiplier
       rotation.current.y -= movementX * finalSensitivity
       rotation.current.x -= movementY * finalSensitivity

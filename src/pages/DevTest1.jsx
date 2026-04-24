@@ -22,7 +22,7 @@ function DevTest1() {
   const theme = resolveTheme(themeMode)
 
   const userSetup = JSON.parse(localStorage.getItem('userSetup') || '{"dpi":800,"valorantSens":0.5,"eDPI":400}')
-  const sensitivityMultiplier = userSetup.eDPI / 400
+  const sensitivityMultiplier = userSetup.valorantSens
 
   useEffect(() => {
     const handleThemeChange = (e) => {
