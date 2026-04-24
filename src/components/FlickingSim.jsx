@@ -298,17 +298,17 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
               ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
               : 'bg-[#1B2E3D] border-[#2A3D4F] text-[#ECE8E1]'
           }`}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#ff4655] mb-2">Test 2 Complete</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#ff4655] mb-2">{t.t2CompleteBadge}</p>
             <h2 className="text-3xl font-black mb-6">
-              {resultRef.current.score} <span className={`text-base font-normal ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>hits</span>
+              {resultRef.current.score} <span className={`text-base font-normal ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>{t.t2Hits}</span>
             </h2>
             <div className={`flex justify-center gap-8 mb-8 text-sm ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
               <div>
-                <p className="text-xs uppercase tracking-wider mb-1">Accuracy</p>
+                <p className="text-xs uppercase tracking-wider mb-1">{t.t2Accuracy}</p>
                 <p className="text-xl font-black text-[#ff4655]">{resultRef.current.accuracy}%</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider mb-1">Miss</p>
+                <p className="text-xs uppercase tracking-wider mb-1">{t.t2Miss}</p>
                 <p className="text-xl font-black">{resultRef.current.misses}</p>
               </div>
             </div>
@@ -317,7 +317,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
               onClick={() => onComplete(resultRef.current)}
               className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
             >
-              Next Test →
+              {t.t2Next}
             </button>
           </div>
         </div>

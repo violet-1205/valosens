@@ -122,6 +122,13 @@ export const translations = {
     disclaimer: '현재 테스트 데이터 기준 추정값입니다. 실제 게임에서 몇 판 플레이하며 미세 조정해 보세요.',
     restart: '처음부터 다시 테스트하기',
     levelLabels: { high: '상', mid: '중', low: '하' },
+
+    // Test 2 completion overlay
+    t2CompleteBadge: 'Test 2 완료',
+    t2Hits: '힛',
+    t2Accuracy: '정확도',
+    t2Miss: '미스',
+    t2Next: '다음 테스트 →',
   },
 
   en: {
@@ -247,5 +254,12 @@ export const translations = {
     disclaimer: 'This is an estimate based on your test data. Fine-tune over a few games.',
     restart: 'Restart from the beginning',
     levelLabels: { high: 'High', mid: 'Mid', low: 'Low' },
+
+    // Test 2 completion overlay
+    t2CompleteBadge: 'Test 2 Complete',
+    t2Hits: 'hits',
+    t2Accuracy: 'Accuracy',
+    t2Miss: 'Miss',
+    t2Next: 'Next Test →',
   },
 }
