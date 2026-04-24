@@ -413,7 +413,7 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
                 statsRef.current.push(data)
               }}
               sensitivity={sensitivity}
-              active={countdown === 0}
+              active={countdown === 0 && !completed}
               theme={theme}
             />
           </>

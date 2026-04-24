@@ -125,7 +125,7 @@ export const translations = {
 
     // Test 2 completion overlay
     t2CompleteBadge: 'Test 2 완료',
-    t2Hits: '힛',
+    t2Hits: '히트',
     t2Accuracy: '정확도',
     t2Miss: '미스',
     t2Next: '다음 테스트 →',
