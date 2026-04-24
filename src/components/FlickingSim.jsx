@@ -188,7 +188,9 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
   const [countdown, setCountdown] = useState(0)
   const [isPointerLocked, setIsPointerLocked] = useState(false)
   const [shootTrigger, setShootTrigger] = useState(0)
+  const [completed, setCompleted] = useState(false)
   const containerRef = useRef(null)
+  const resultRef = useRef(null)
 
   const statsRef = useRef([])
 
@@ -261,16 +263,16 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
 
     window.dispatchEvent(new CustomEvent('test-end'))
     const accuracy = Math.round((score / (score + misses)) * 100) || 0
-    const timeSpent = 30
-    onComplete({
+    resultRef.current = {
       accuracy,
       score,
       misses,
-      timeSpent,
+      timeSpent: 30,
       recommendation,
       detail,
       stats: statsRef.current
-    })
+    }
+    setCompleted(true)
   }, [started, countdown, timeLeft, score, misses, onComplete])
 
   useEffect(() => {
@@ -288,7 +290,40 @@ export default function FlickingSim({ onComplete, sensitivity, theme = 'dark', o
       className={`w-full h-full relative ${bg} ${isPointerLocked ? 'cursor-none' : 'cursor-default'}`}
       onClick={requestLock}
     >
-      {!started && (
+      {/* 완료 오버레이 */}
+      {completed && resultRef.current && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className={`text-center p-8 rounded-3xl border shadow-2xl max-w-sm w-full mx-4 ${
+            theme === 'light'
+              ? 'bg-white/95 border-[#DDD8D2] text-[#1A1F2E]'
+              : 'bg-[#1B2E3D] border-[#2A3D4F] text-[#ECE8E1]'
+          }`}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#ff4655] mb-2">Test 2 Complete</p>
+            <h2 className="text-3xl font-black mb-6">
+              {resultRef.current.score} <span className={`text-base font-normal ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>hits</span>
+            </h2>
+            <div className={`flex justify-center gap-8 mb-8 text-sm ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div>
+                <p className="text-xs uppercase tracking-wider mb-1">Accuracy</p>
+                <p className="text-xl font-black text-[#ff4655]">{resultRef.current.accuracy}%</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider mb-1">Miss</p>
+                <p className="text-xl font-black">{resultRef.current.misses}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onComplete(resultRef.current)}
+              className="px-10 py-4 rounded-2xl bg-[#ff4655] text-white font-bold hover:bg-[#ff4655]/90 transition-all hover:scale-105 shadow-lg shadow-red-500/20"
+            >
+              Next Test →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!started && !completed && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div
             className={`text-center p-8 rounded-3xl border shadow-2xl max-w-md ${
